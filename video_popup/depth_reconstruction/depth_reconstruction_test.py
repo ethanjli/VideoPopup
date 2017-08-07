@@ -4,20 +4,29 @@ import cPickle as pickle
 
 import logging
 
-#from video_popup.utils import util
+from video_popup.utils import util
 from depth_reconstruction import DepthReconstruction
 
 expr = 'kitti_rigid'
 #expr = 'kitti_dense'
 
+_PACKAGE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_ROOT_PATH = os.path.dirname(_PACKAGE_PATH)
+
 if(expr == 'kitti_rigid'):
 
     print expr
 
-    seg_file = '../../data/Kitti/05_rigid2/broxmalik_Size2/broxmalikResults/f1t2/v1/' \
-               'vw10_nn10_k1_thresh100_max_occ2_op0_cw2.5/init200/mdl20000_pw3000_oc10_engine0_it5/results.pkl'
+    seg_file = os.path.join(
+        _ROOT_PATH,
+        'data/Kitti/05_rigid2/broxmalik_Size2/broxmalikResults/f1t2/v1/' \
+        'vw10_nn10_k1_thresh100_max_occ2_op0_cw2.5/init200/mdl20000_pw3000_oc10_engine0_it5/results.pkl'
+    )
 
-    bin_gt_file = '../../data/Kitti/05_rigid2/broxmalik_Size2/002648.bin'
+    bin_gt_file = os.path.join(
+        _ROOT_PATH,
+        'data/Kitti/05_rigid2/broxmalik_Size2/002648.bin'
+    )
 
     K = np.array([[707.0912, 0,  601.8873],
                   [0,  707.0912, 183.1104],
@@ -41,6 +50,7 @@ if(expr == 'kitti_rigid'):
     # util.plot_nbor(seg['W'], seg['Z'], seg['s'], seg['images'], seg['labels_parts'])
 
     data = (W, Z, labels, K, images)
+    print images
 
     # parameters
     # num_segments
@@ -72,8 +82,11 @@ if(expr == 'kitti_rigid'):
 
 elif(expr == 'kitti_dense'):
 
-    seg_file = '../../data/Kitti/05_2f/dense_flow/epicflowResults/f1t2/v1_d4/' \
-               'vw10_nn10_k1_thresh100_max_occ2_op0_cw2.5/init200/mdl1000_pw10000_oc10_engine0_it5/results.pkl'
+    seg_file = os.path.join(
+        _ROOT_PATH,
+        'data/Kitti/05_2f/dense_flow/epicflowResults/f1t2/v1_d4/' \
+        'vw10_nn10_k1_thresh100_max_occ2_op0_cw2.5/init200/mdl1000_pw10000_oc10_engine0_it5/results.pkl'
+    )
 
     K = np.array([[707.0912, 0,  601.8873],
                   [0,  707.0912, 183.1104],
@@ -117,7 +130,7 @@ elif(expr == 'kitti_dense'):
                    [0.999977309828700,  -0.001805528627661,  -0.006496203536139,  -0.333996806443300]])
 
     para['Tr'] = Tr
-    para['bin_gt_file'] = '../../data/Kitti/05_2f/002491.bin'
+    para['bin_gt_file'] = os.path.join(_ROOT_PATH, 'data/Kitti/05_2f/002491.bin')
 
     logging.basicConfig(filename=para['seg_folder'] + '/record.log', level=logging.DEBUG,
                         format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')

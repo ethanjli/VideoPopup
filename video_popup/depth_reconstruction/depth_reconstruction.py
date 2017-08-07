@@ -6,7 +6,7 @@ import cv2
 import cvxpy as cp
 
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('Qt4Agg')
 
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
@@ -136,18 +136,18 @@ class DepthReconstruction(object):
         nH, nW, nC = self.ref_image.shape
         grid_x, grid_y = np.mgrid[0:nH, 0:nW]
 
-        # #plot sparse 3D reconstruction results elegantly
-        # vertices = np.dot(np.linalg.inv(self.K),
-        #                   self.depths * ( np.vstack((self.W[0:2,:],
-        #                                              np.ones( (1,self.W.shape[1]) ) ) ) ) ).T
-        #
-        # # util.plot_3d_point_cloud_vispy( vertices, self.track_colors )
-        #
-        # vertices[:,1] = -vertices[:,1]
-        # vertices[:,2] = -vertices[:,2]
-        #
-        # from video_popup.visualization import vispy_viewer
-        # vispy_viewer.app_call(vertices, self.track_colors, self.K, nH, nW)
+        #plot sparse 3D reconstruction results elegantly
+        vertices = np.dot(np.linalg.inv(self.K),
+                          self.depths * ( np.vstack((self.W[0:2,:],
+                                                     np.ones( (1,self.W.shape[1]) ) ) ) ) ).T
+        
+        # util.plot_3d_point_cloud_vispy( vertices, self.track_colors )
+        
+        vertices[:,1] = -vertices[:,1]
+        vertices[:,2] = -vertices[:,2]
+        
+        from video_popup.visualization import vispy_viewer
+        vispy_viewer.app_call(vertices, self.track_colors, self.K, nH, nW)
 
         # we already create edges between fg and bg, just set those unknown region as bg
         dense_labels[dense_labels == -1] = self.bg_label
@@ -167,7 +167,7 @@ class DepthReconstruction(object):
 
         # try image inpainting
         # depth_map_inpainting = util.image_inpainting_sparse(self.W[1::-1,:], self.depths, nH, nW)
-        # depth_util.depth_map_plot(depth_map_interp, self.ref_image, self.K)
+        depth_util.depth_map_plot(depth_map_interp, self.ref_image, self.K)
         # depth_util.depth_map_plot(depth_map_interp, self.ref_image, self.K, labels = dense_labels)
         # depth_util.depth_map_plot(depth_map, sp_colors_t[superpixels.reshape(-1),:].reshape((nH,nW,3)), self.K, labels = superpixels)
 
@@ -183,6 +183,7 @@ class DepthReconstruction(object):
 
             """ save sparse result using linear interpolation """
             depth_map_interp_linear = griddata(self.W[1::-1,:].T, self.depths, (grid_x, grid_y), method='linear')
+            depth_util.depth_map_plot(depth_map_interp_linear, self.ref_image, self.K)
             depth_map_interp_linear *= global_scale
             idepth = 1.0 / depth_map_interp_linear
             idepth[np.isnan(idepth)] = 1
@@ -218,11 +219,13 @@ class DepthReconstruction(object):
 
             if(self.para['has_gt']):
                 depth_gt = self.get_ground_truth_depth(self.para)
-                # # scale up depths
+                # scale up depths
                 # for obj in range(objects_num):
                 #     depth_map_interp[dense_labels == obj] *= 1/inv_scales[obj,0]
                 # self.evaluation(depth_map_interp, depth_gt, self.para, method='SparseInterp', scale_optim = 1)
-                self.evaluation( depth_map, depth_gt, self.para, epara = energy_para)
+                # self.evaluation( depth_map, depth_gt, self.para, epara = energy_para)
+        # depth_map_interp_linear = griddata(self.W[1::-1,:].T, self.depths, (grid_x, grid_y), method='linear')
+        # depth_util.depth_map_plot(depth_map_interp_linear, self.ref_image, self.K, labels = dense_labels)
 
     def sparse_reconstruction(self, plot_seg = 0, plot_recons = 0):
         """

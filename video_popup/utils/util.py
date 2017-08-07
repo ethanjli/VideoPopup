@@ -1,6 +1,8 @@
 import os
 import sys
 
+import matplotlib
+matplotlib.use('Qt4Agg')
 import matplotlib.cm as cmx
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
@@ -19,9 +21,11 @@ import cvxpy as cp
 import vispy.scene
 from vispy.scene import visuals
 
-sys.path.append('../../libs/read_write_tracks/python_tracks')
-sys.path.append('../../libs/nhood/python_neighbors')
-sys.path.append('../../libs/permutohedral_python')
+_PACKAGE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_ROOT_PATH = os.path.dirname(_PACKAGE_PATH)
+sys.path.append(os.path.join(_ROOT_PATH, 'libs/read_write_tracks/python_tracks'))
+sys.path.append(os.path.join(_ROOT_PATH, 'libs/nhood/python_neighbors'))
+sys.path.append(os.path.join(_ROOT_PATH, 'libs/permutohedral_python'))
 
 import myfilter
 import tracks as pytracks

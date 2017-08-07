@@ -1,9 +1,12 @@
 # check the ground truth depth image
-
+import os
 import cv2
 import numpy as np
 
+import matplotlib
+matplotlib.use('Qt4Agg')
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 
 import depth_util
 
@@ -11,9 +14,12 @@ expr = 'kitti_test'
 expr = 'kitti_rigid'
 #expr = 'kitti_05'
 
+_PACKAGE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_ROOT_PATH = os.path.dirname(_PACKAGE_PATH)
+
 if(expr == 'kitti_test'):
 
-    folder = '../../data/Kitti/05/broxmalik_Size4/'
+    folder = os.path.join(_ROOT_PATH, 'data/Kitti/05/broxmalik_Size4/')
     gt_file = folder + '002491.bin'
     image_file = folder + '002491.ppm'
 
@@ -36,7 +42,7 @@ if(expr == 'kitti_test'):
 
 elif(expr == 'kitti_rigid'):
 
-    folder = '../../data/Kitti/05_rigid/broxmalik_Size2/'
+    folder = os.path.join(_ROOT_PATH, 'data/Kitti/05_rigid/broxmalik_Size2/')
     gt_file = folder + '002637.bin'
     image_file = folder + '002637.ppm'
     img = cv2.imread(image_file, cv2.IMREAD_ANYCOLOR | cv2.IMREAD_ANYDEPTH)
