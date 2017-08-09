@@ -101,6 +101,7 @@ class DepthReconstruction(object):
 
         self.sparse_reconstruction()
 
+	results_folder = self.para['seg_folder'] + '/SuperPixels/'
         try:
             results_file = self.para['seg_folder'] + '/SuperPixels/' + str(self.para['num_segments']) + '/sp_info.pkl'
             util.ensure_dir(results_file)
@@ -148,6 +149,10 @@ class DepthReconstruction(object):
         
         from video_popup.visualization import vispy_viewer
         vispy_viewer.app_call(vertices, self.track_colors, self.K, nH, nW)
+	
+	pc_output = {'vertices': vertices}
+        with open('{:s}/point_cloud.mat'.format(results_folder),"wb") as f:
+            scipy.io.savemat(f, mdict=pc_output)
 
         # we already create edges between fg and bg, just set those unknown region as bg
         dense_labels[dense_labels == -1] = self.bg_label
@@ -235,7 +240,8 @@ class DepthReconstruction(object):
 
         try:
 
-            results_file = self.para['seg_folder'] + '/SparseResults/' + 'results.pkl'
+	    results_folder = self.para['seg_folder'] + '/SparseResults/'
+            results_file = results_folder  + 'results.pkl'
             util.ensure_dir(results_file)
 
             with open(results_file, 'r') as f:

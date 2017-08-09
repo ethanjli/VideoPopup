@@ -19,12 +19,16 @@ if(expr == 'kitti_rigid'):
 
     seg_file = os.path.join(
         _ROOT_PATH,
-        'data/Kitti/05_rigid2/broxmalik_Size2/broxmalikResults/f1t2/v1/' \
-        'vw10_nn10_k1_thresh100_max_occ2_op0_cw2.5/init200/mdl20000_pw3000_oc10_engine0_it5/results.pkl'
+        #'data/Kitti/05/broxmalik_Size4/broxmalikResults/f1t15/v5/' \
+	#'vw10_nn10_k5_thresh10000_max_occ12_op0_cw2.5/init200/mdl2000_pw10000_oc10_engine0_it5/results.pkl'
+
+       'data/Kitti/05_rigid2/broxmalik_Size2/broxmalikResults/f1t2/v1/' \
+       'vw10_nn10_k1_thresh100_max_occ2_op0_cw2.5/init200/mdl20000_pw3000_oc10_engine0_it5/results.pkl'
     )
 
     bin_gt_file = os.path.join(
         _ROOT_PATH,
+        #'data/Kitti/05/broxmalik_Size4/002491.bin'
         'data/Kitti/05_rigid2/broxmalik_Size2/002648.bin'
     )
 
@@ -40,14 +44,17 @@ if(expr == 'kitti_rigid'):
 
     W = seg['W'][0:4,mask]
     Z = seg['Z'][0:2,mask]
-    # labels = seg['labels_objects'][mask]
-    # labels = seg['labels_parts'][mask]
+    #labels = seg['labels_objects'][mask]
+    #labels = seg['labels_parts'][mask]
+    #labels = seg['assignment'][mask]
     labels = seg['labels'][mask]
     images = seg['images'][0:2]
+    #images = seg['images'][0:2]
+
 
     # plot the segmentation result
-    # util.plot_nbor(seg['W'], seg['Z'], seg['s'], seg['images'], seg['labels_objects'])
-    # util.plot_nbor(seg['W'], seg['Z'], seg['s'], seg['images'], seg['labels_parts'])
+    #util.plot_nbor(seg['W'], seg['Z'], seg['s'], seg['images'], seg['labels_objects'])
+    #util.plot_nbor(seg['W'], seg['Z'], seg['s'], seg['images'], seg['labels_parts'])
 
     data = (W, Z, labels, K, images)
     print images

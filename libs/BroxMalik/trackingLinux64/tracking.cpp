@@ -334,7 +334,7 @@ int main(int argc, char** args) {
 
     computeCorners(*aImage1,aCorners,3.0f);
     float aCornerAvg = aCorners.avg();
-
+    std::cout << "mStep" << mStep << std::endl;
     for (int ay = 4; ay < mYSize-4; ay+=mStep)
       for (int ax = 4; ax < mXSize-4; ax+=mStep) {
         if (aCovered(ax,ay) < mStep*mStep) continue;
@@ -342,7 +342,6 @@ int main(int argc, char** args) {
         float distToImageBnd = exp(-0.1*NMath::min(NMath::min(NMath::min(ax,ay),mXSize-ax),mYSize-ay));
         if (aCorners(ax,ay) < 1.0* (aCornerAvg*(0.1+distToImageBnd))) continue;
         if (aCorners(ax,ay) < 1.0*(1.0f+distToImageBnd)) continue;
-
         mTracks.push_back(CTrack());
         CTrack& newTrack = mTracks.back();
         newTrack.mox = ax;

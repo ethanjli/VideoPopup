@@ -25,6 +25,9 @@ expr = 'two-men'
 
 show = 2
 
+_PACKAGE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_ROOT_PATH = os.path.dirname(_PACKAGE_PATH)
+
 def get_depth_map(W, Z, labels, images, vertices, points, K_persp, showFrames = 1, sequence='bird', save_seg = 0):
 
     W = W[:, points.astype(np.int32)]
@@ -80,8 +83,11 @@ if expr == 'Kitti':
                         [0,  707.0912, 183.1104],
                         [0,        0,       1]])
 
-    seg_file = '../../data/Kitti/05/broxmalik_Size4/broxmalikResults/' \
+    seg_file = 'data/Kitti/05/broxmalik_Size4/broxmalikResults/' \
                'f1t15/v5/vw10_nn10_k5_thresh10000_max_occ12_op0_cw2.5/init200/mdl2000_pw10000_oc10_engine0_it5/results.pkl'
+
+#'../../data/Kitti/05/broxmalik_Size4/broxmalikResults/' \
+               #'f1t15/v5/vw10_nn10_k5_thresh10000_max_occ12_op0_cw2.5/init200/mdl2000_pw10000_oc10_engine0_it5/results.pkl'
 
     seg_path, file_name = os.path.split(seg_file)
     vispy_file = seg_path + '/OpenSfM/' + 'vispy_output.pkl'
@@ -100,8 +106,11 @@ elif expr == 'two-men':
                         [0, 1200,  269.5],
                         [0,    0,      1]])
 
-    seg_file = '../../data/Two-men/images/broxmalik_size4/broxmalikResults/' \
+    seg_file = 'data/Two-men/images/broxmalik_size4/broxmalikResults/' \
                'f1t30/v5_d4/vw10_nn10_k5_thresh10000_max_occ10_op0_cw2.5/init200/mdl20_pw10_oc10_engine0_it5/results.pkl'
+		#'data/Two-men/images/broxmalik_size4/broxmalikResults/' \
+               #'f1t30/v5_d4/vw10_nn10_k5_thresh10000_max_occ10_op0_cw2.5/init200/mdl20_pw10_oc10_engine0_it5/results.pkl'
+
 
     seg_path, file_name = os.path.split(seg_file)
     vispy_file = seg_path + '/OpenSfM/' + 'vispy_output.pkl'
