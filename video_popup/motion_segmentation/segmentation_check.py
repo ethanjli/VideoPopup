@@ -7,7 +7,7 @@ expr = 'bird7'
 
 if(expr == 'two-men'):
 
-    seg_file = '../../data/Two-men/images/broxmalik_size4/broxmalikResults' \
+    seg_file = '../../../data/Two-men/images/broxmalik_size4/broxmalikResults' \
                '/f1t30/v5_d4/vw10_nn10_k5_thresh10000_max_occ10_op0_cw2.5/init200/mdl20_pw10_oc10_engine0_it5/results.pkl'
 
     with open(seg_file, 'r') as f:
@@ -25,7 +25,7 @@ if(expr == 'two-men'):
 
 elif(expr == 'bird7'):
 
-    seg_file = '../../data/Youtube_birds/bird_shot07/f1t35/v5/' \
+    seg_file = '../../../data/Youtube_birds/bird_shot07/f1t35/v5/' \
                'vw2000_nn10_k5_threshinf_max_occ30_op0_cw2.5/init300/mdl1000_pw100_oc0_engine2_it5/results.pkl'
 
     with open(seg_file, 'r') as f:

@@ -574,7 +574,9 @@ def merge_parts_to_objects(W, Z, s, labels, assignment, thresh=0, del_outliers=1
 
         # all the inlier points left
         points = np.sum(inliers)
-        mapping[inliers] = range(points)
+        #mapping[inliers] = range(points)
+        mapping_reduce = mapping[0:mapping.shape[0] - 1]
+        mapping_reduce[inliers] = range(points)
 
         s_new = mapping[s_new]
 
@@ -621,7 +623,9 @@ def merge_parts_to_objects(W, Z, s, labels, assignment, thresh=0, del_outliers=1
             for j in proper_object_ind:
                 pmask2 = labels_objects == j
                 fmask2 = Zdata[:, pmask2]
-                Wj = W[:, pmask2]
+                #Wj = W[:, pmask2]
+                W_slice = W[:, 0:pmask2.shape[0]]
+                Wj = W_slice[:, pmask2]
 
                 mask_ij = fmask2 * fmask.reshape((-1,1))
                 pmask3 = np.any(mask_ij, axis=0)
@@ -807,13 +811,13 @@ def get_init_scales(labels, bg_label, inv_depths, superpixels_W, object_edges,
                     fg_invd = fg_invd[fg_label_mask]
 
                     """print inverse depth values"""
-                    print "____________________________"
-                    print bg_seg, fg_seg
-                    print "bg inverse depth"
-                    print bg_invd
-                    print "fg inverse depth"
-                    print fg_invd
-                    print "____________________________"
+                    print("____________________________")
+                    print(bg_seg, fg_seg)
+                    print("bg inverse depth")
+                    print(bg_invd)
+                    print("fg inverse depth")
+                    print(fg_invd)
+                    print("____________________________")
 
                     # filter negative values
                     fg_invd = fg_invd[ fg_invd > 0 ]

@@ -17,7 +17,9 @@ import logging
 # import matplotlib.pyplot as plt
 # import matplotlib.image as mpimg
 import video_popup_pb2
-sys.path.append('../../libs/segmentation_rui_new')
+_PACKAGE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_ROOT_PATH = os.path.dirname(_PACKAGE_PATH)
+sys.path.append(os.path.join(_ROOT_PATH, 'libs', 'segmentation_rui_new'))
 
 from video_popup.utils import util
 from model_fitting import ModelFitting
@@ -184,7 +186,7 @@ def persp_segmentation(neighborhood_para, segmentaton_para, model_fitting_para, 
                 with open('{:s}/results.mat'.format(results_folder),"wb") as f:
                     scipy.io.savemat(f, mdict=data)
             except:
-                print "saving error"
+                print("saving error")
 
             # util.plot_traj2(W_new, Z_new, images, labels=labels, save_fig=1, frame_time = 0.1,
             #                 frame_step=2, save_folder=results_folder, save_name='labels.png')

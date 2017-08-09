@@ -5,6 +5,7 @@ Dynamic Scenes"
 
 """
 
+import os
 import numpy as np
 import glob as glob
 
@@ -15,12 +16,15 @@ segmentaton_para = video_popup_pb2.SegmentationPara()
 neighborhood_para = video_popup_pb2.NeighborhoodPara()
 
 expr = 'kitti_rigid'
-expr = 'kitti_dense_test'
-expr = 'bird7'
-expr = 'two_men'
+#expr = 'kitti_dense_test'
+#expr = 'bird7'
+#expr = 'two_men'
 
 downsampling = 1
 saving_seg_result = 0
+
+_PACKAGE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_ROOT_PATH = os.path.dirname(_PACKAGE_PATH)
 
 if(expr == 'two_men'):
 
@@ -105,13 +109,13 @@ elif(expr == 'kitti_rigid'):
     neighborhood_para.occlusion_penalty = 0
     neighborhood_para.velocity_weight = 10
 
-    segmentaton_para.images_path = '../../data/Kitti/05_rigid2/*.png'
+    segmentaton_para.images_path = os.path.join(_ROOT_PATH, 'data/Kitti/05_rigid2/*.png')
     images = sorted(glob.glob(segmentaton_para.images_path))[0: end_frame- start_frame + 1]
     segmentaton_para.min_vis_frames = 1
 
     model_fitting_para = segmentaton_para.model_fitting_para
 
-    segmentaton_para.tracks_path = '../../data/Kitti/05_rigid2/broxmalik_Size2/broxmalikResults/broxmalikTracks2.dat'
+    segmentaton_para.tracks_path = os.path.join(_ROOT_PATH, 'data/Kitti/05_rigid2/broxmalik_Size2/broxmalikResults/broxmalikTracks2.dat')
     model_fitting_para.mdl = 20000
     model_fitting_para.graph_cut_para.pairwise_weight = 3000
     model_fitting_para.graph_cut_para.overlap_cost = 10
@@ -168,7 +172,7 @@ elif(expr == 'bird7'):
 
     saving_seg_result = 1
 
-print start_frame
+#print start_frame
 
 ps.persp_segmentation(neighborhood_para, segmentaton_para, model_fitting_para, images, start_frame, end_frame,
                       saving_seg_result = saving_seg_result, downsampling = downsampling)

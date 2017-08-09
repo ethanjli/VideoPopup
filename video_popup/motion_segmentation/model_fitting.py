@@ -99,7 +99,7 @@ class ModelFitting(object):
 
         except:
 
-            step = np.maximum(math.floor(P / num), 1)
+            step =  np.maximum(int(math.floor(P*1.0 / num)), 1) 
 
             model_points = {}
 
@@ -153,7 +153,7 @@ class ModelFitting(object):
 
     def run(self):
 
-        for i in range(self.params.iters_num):
+        for i in range(int(self.params.iters_num)):
 
             print 'iteration' + '' + str(i)
 
