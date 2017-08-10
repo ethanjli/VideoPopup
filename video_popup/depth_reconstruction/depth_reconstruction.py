@@ -148,7 +148,7 @@ class DepthReconstruction(object):
         vertices[:,2] = -vertices[:,2]
         
         from video_popup.visualization import vispy_viewer
-        vispy_viewer.app_call(vertices, self.track_colors, self.K, nH, nW)
+        #vispy_viewer.app_call(vertices, self.track_colors, self.K, nH, nW)
 
  	util.save_3d_point_cloud('{:s}/points_sparse.mat'.format(results_folder), vertices, self.track_colors)	
 #	pc_output = {'point_colored' : np.hstack([vertices, self.track_colors])}
@@ -175,7 +175,7 @@ class DepthReconstruction(object):
         depth_util.depth_map_save('{:s}/points_dense.mat'.format(results_folder), depth_map_interp, self.ref_image, self.K)
         # try image inpainting
         # depth_map_inpainting = util.image_inpainting_sparse(self.W[1::-1,:], self.depths, nH, nW)
-        depth_util.depth_map_plot(depth_map_interp, self.ref_image, self.K)
+        #depth_util.depth_map_plot(depth_map_interp, self.ref_image, self.K)
         # depth_util.depth_map_plot(depth_map_interp, self.ref_image, self.K, labels = dense_labels)
         # depth_util.depth_map_plot(depth_map, sp_colors_t[superpixels.reshape(-1),:].reshape((nH,nW,3)), self.K, labels = superpixels)
 
@@ -196,7 +196,7 @@ class DepthReconstruction(object):
 
             """ save sparse result using linear interpolation """
             depth_map_interp_linear = griddata(self.W[1::-1,:].T, self.depths, (grid_x, grid_y), method='linear')
-            depth_util.depth_map_plot(depth_map_interp_linear, self.ref_image, self.K)
+            #depth_util.depth_map_plot(depth_map_interp_linear, self.ref_image, self.K)
             depth_map_interp_linear *= global_scale
             idepth = 1.0 / depth_map_interp_linear
             idepth[np.isnan(idepth)] = 1

@@ -109,13 +109,14 @@ elif(expr == 'kitti_rigid'):
     neighborhood_para.occlusion_penalty = 0
     neighborhood_para.velocity_weight = 10
 
-    segmentaton_para.images_path = os.path.join(_ROOT_PATH, 'data/Kitti/05_rigid2/*.png')
+    #segmentaton_para.images_path = os.path.join(_ROOT_PATH, 'data/Kitti/05_rigid2/*.png')
+    segmentaton_para.images_path = os.path.join(_ROOT_PATH, 'data/Kitti/05/*.png')
     images = sorted(glob.glob(segmentaton_para.images_path))[0: end_frame- start_frame + 1]
     segmentaton_para.min_vis_frames = 1
 
     model_fitting_para = segmentaton_para.model_fitting_para
 
-    segmentaton_para.tracks_path = os.path.join(_ROOT_PATH, 'data/Kitti/05_rigid2/broxmalik_Size2/broxmalikResults/broxmalikTracks2.dat')
+    segmentaton_para.tracks_path = os.path.join(_ROOT_PATH, 'data/Kitti/05/broxmalik_Size4/broxmalikResults/broxmalikTracks15.dat')
     model_fitting_para.mdl = 20000
     model_fitting_para.graph_cut_para.pairwise_weight = 3000
     model_fitting_para.graph_cut_para.overlap_cost = 10
