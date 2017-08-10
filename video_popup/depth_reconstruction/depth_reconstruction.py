@@ -172,7 +172,7 @@ class DepthReconstruction(object):
 
         depth_map_interp = griddata(self.W[1::-1,:].T, self.depths, (grid_x, grid_y), method='nearest')
 
-        depth_util.depth_map_save('{:s}/points_dense.mat'.format(results_folder), depth_map_interp, self.ref_image, self.K)
+        depth_util.depth_map_save('{:s}/points_dense_nearest.mat'.format(results_folder), depth_map_interp, self.ref_image, self.K)
         # try image inpainting
         # depth_map_inpainting = util.image_inpainting_sparse(self.W[1::-1,:], self.depths, nH, nW)
         #depth_util.depth_map_plot(depth_map_interp, self.ref_image, self.K)

@@ -82,7 +82,7 @@ if(expr == 'kitti_sequence'):
 	    depth_map_recons.run()
 
             point_cloud_parent = os.path.join(os.path.dirname(seg_file), 'SuperPixels')
-            for file_name in ['points_dense', 'points_sparse', 'points_dense_linear']:
+            for file_name in ['points_sparse', 'points_dense_nearest', 'points_dense_linear']:
                 os.rename(os.path.join(point_cloud_parent, file_name + '.mat'), os.path.join(point_cloud_parent, file_name + '_' + str(image_index) + '.mat'))
 
 elif(expr == 'kitti_rigid'):
