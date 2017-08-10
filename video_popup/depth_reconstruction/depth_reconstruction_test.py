@@ -70,7 +70,7 @@ if(expr == 'kitti_rigid'):
     para['kappa_list'] = [1]
     para['gamma_list'] = [1]
 
-    para['has_gt'] = 1
+    para['has_gt'] = 0
     para['expr'] = 'kitti'
 
     Tr = np.array([[-0.001857739385241,  -0.999965951351000,  -0.008039975204516,  -0.004784029760483],

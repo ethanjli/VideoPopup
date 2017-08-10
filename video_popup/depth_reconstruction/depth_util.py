@@ -3,6 +3,7 @@ import cvxpy as cp
 
 from scipy.interpolate import griddata
 from video_popup.visualization.vispy_viewer import app_call
+from video_popup.utils import util
 
 def get_kitti_depth_gt(K, Tr, nH, nW, gt_file, depth_min=5, depth_max=20):
 
@@ -225,6 +226,25 @@ def depth_map_plot(depth_map, ref_image, K, labels = 0, edge_thresh = 1000):
     vertices[:,2] = -vertices[:,2]
 
     app_call(vertices, colors, K, nH, nW, image_grid = 1, labels = labels, edge_thresh =  edge_thresh)
+
+def depth_map_save(path, depth_map, ref_image, K):
+
+    nH, nW, nC = ref_image.shape
+    grid_x, grid_y = np.mgrid[0:nH, 0:nW]
+
+    grid_x = grid_x.reshape((1,-1))
+    grid_y = grid_y.reshape((1,-1))
+
+    colors = ref_image.reshape((-1,3))
+
+    vertices = np.dot(np.linalg.inv(K),
+                      depth_map.reshape((1,-1)) * np.vstack( ( grid_y.reshape((1,-1)),
+                                                               grid_x.reshape((1,-1)),
+                                                               np.ones((1, nH*nW)) ) ) ).T.astype(np.float32)
+    vertices[:,1] = -vertices[:,1]
+    vertices[:,2] = -vertices[:,2]
+
+    util.save_3d_point_cloud(path, vertices, colors)
 
 def depth_maps_plot(depth_maps, ref_image, K, labels = 0, edge_thresh = 1000):
 

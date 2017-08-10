@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from mpl_toolkits.mplot3d import Axes3D
 
+import scipy
 from scipy.sparse import csgraph
 from scipy.sparse import csr_matrix
 
@@ -846,8 +847,8 @@ def seg_dense_interp(Ws, labels, superpixel_seg):
     result = np.ones([H,W]) * -1
 
     for p in xrange(Ws.shape[1]):
-        voting[ min(max(round(Ws[1, p]),0), H -1),
-                min(max(round(Ws[0, p]),0), W -1),
+        voting[ int(min(max(round(Ws[1, p]),0), H -1)),
+                int(min(max(round(Ws[0, p]),0), W -1)),
                 labels[p] ] += 1
 
     # sweep over each superpixel, and check the voting
@@ -974,6 +975,12 @@ def dummy_image_interp(image, uv, values, bg_mask = '', flip_fg = 0, method = 'n
         depth_map[bg_mask] = np.max(depth_map[fg_mask])
 
     return  depth_map
+
+def save_3d_point_cloud(path, points, colors):
+    with open(path, 'wb') as f:
+        scipy.io.savemat(f, mdict={
+            'points': np.hstack([points, colors])
+        })
 
 ### plot 3d point clouds elegantly
 def plot_3d_point_cloud_vispy(points, colors, size=5):

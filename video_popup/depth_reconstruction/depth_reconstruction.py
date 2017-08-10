@@ -149,10 +149,12 @@ class DepthReconstruction(object):
         
         from video_popup.visualization import vispy_viewer
         vispy_viewer.app_call(vertices, self.track_colors, self.K, nH, nW)
-	
-	pc_output = {'vertices': vertices}
-        with open('{:s}/point_cloud.mat'.format(results_folder),"wb") as f:
-            scipy.io.savemat(f, mdict=pc_output)
+
+ 	util.save_3d_point_cloud('{:s}/points_sparse.mat'.format(results_folder), vertices, self.track_colors)	
+#	pc_output = {'point_colored' : np.hstack([vertices, self.track_colors])}
+#	#pc_output = {'vertices':, vertices 'track_colors': self.track_colors}
+#        with open('{:s}/point_colored.mat'.format(results_folder),"wb") as f:
+#            scipy.io.savemat(f, mdict=pc_output)
 
         # we already create edges between fg and bg, just set those unknown region as bg
         dense_labels[dense_labels == -1] = self.bg_label
@@ -170,12 +172,18 @@ class DepthReconstruction(object):
 
         depth_map_interp = griddata(self.W[1::-1,:].T, self.depths, (grid_x, grid_y), method='nearest')
 
+        depth_util.depth_map_save('{:s}/points_dense.mat'.format(results_folder), depth_map_interp, self.ref_image, self.K)
         # try image inpainting
         # depth_map_inpainting = util.image_inpainting_sparse(self.W[1::-1,:], self.depths, nH, nW)
         depth_util.depth_map_plot(depth_map_interp, self.ref_image, self.K)
         # depth_util.depth_map_plot(depth_map_interp, self.ref_image, self.K, labels = dense_labels)
         # depth_util.depth_map_plot(depth_map, sp_colors_t[superpixels.reshape(-1),:].reshape((nH,nW,3)), self.K, labels = superpixels)
 
+        depth_map_interp_linear = griddata(self.W[1::-1,:].T, self.depths, (grid_x, grid_y), method='linear')
+
+        depth_util.depth_map_save('{:s}/points_dense_linear.mat'.format(results_folder), depth_map_interp_linear, self.ref_image, self.K)
+
+ 	doing_rigid = self.para.get('doing_rigid', 0)
         if (self.para['has_gt']):
 
             depth_gt = self.get_ground_truth_depth(self.para)
@@ -282,6 +290,7 @@ class DepthReconstruction(object):
 
                 # if(plot_recons):
                 #     util.scatter3d(X[:, mask2 == False])
+
 
                 if(plot_recons):
                     util.plot_3d_point_cloud_vispy(X[0:3, mask2 == False].T,
