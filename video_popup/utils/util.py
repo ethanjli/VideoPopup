@@ -977,9 +977,15 @@ def dummy_image_interp(image, uv, values, bg_mask = '', flip_fg = 0, method = 'n
     return  depth_map
 
 def save_3d_point_cloud(path, points, colors):
+    
+    #Remove NaN's
+    nonNan = ~np.any(np.isnan(points), axis=1)
+    pointcloud = np.hstack([points, colors])
+    pointcloud = pointcloud[nonNan,:] 
+
     with open(path, 'wb') as f:
         scipy.io.savemat(f, mdict={
-            'points': np.hstack([points, colors])
+            'points': pointcloud 
         })
 
 ### plot 3d point clouds elegantly
