@@ -15,7 +15,7 @@ _PACKAGE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _ROOT_PATH = os.path.dirname(_PACKAGE_PATH)
 
 if(expr == 'kitti_sequence'):
-    for image_index in range(15):
+    for image_index in range(14):
 
 	    print image_index
 
@@ -38,9 +38,8 @@ if(expr == 'kitti_sequence'):
 		seg = pickle.load(f)
 
 	    Z = seg['Z']
-	    mask = np.logical_and(Z[0], Z[1])
-
-	    W = seg['W'][2*image_index:2*image_index+2,mask]
+	    mask = np.logical_and(Z[image_index], Z[image_index+1])
+	    W = seg['W'][(2*image_index):(2*image_index+4),mask]
 	    Z = seg['Z'][image_index:image_index+2,mask]
 	    labels = seg['labels_objects'][mask]
 	    images = seg['images'][image_index:image_index+2]

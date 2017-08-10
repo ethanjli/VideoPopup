@@ -255,7 +255,7 @@ class DepthReconstruction(object):
             with open(results_file, 'r') as f:
                 data = pickle.load(f)
 
-            self.W = data['W']; self.Z = data['Z']
+            #self.W = data['W']; self.Z = data['Z']
             self.depths = data['depths']
             self.inv_depths = data['inv_depths']
             self.labels = data['labels']
@@ -263,7 +263,12 @@ class DepthReconstruction(object):
             self.pnts_num = data['pnts_num']
             self.fitting_cost = data['fitting_cost']
 
-        except:
+	    #Output the file to a .mat file so we can read it
+	    output_file = results_folder + 'results.mat'
+	    
+	    with open(output_file, 'wb') as f:
+		scipy.io.savemat(f, mdict=data)
+	except:
 
             for label in np.unique(self.labels):
 
@@ -274,6 +279,7 @@ class DepthReconstruction(object):
                 if(plot_seg):
                     util.plot_traj(Wi, Zi, self.images, 1)
 
+		print 'Wi size: ', Wi.shape
                 R, T, X, cost, inliers = sfm2.reconstruction(Wi, self.K)
 
                 xmin = np.percentile(X[2,:], 5)
@@ -319,8 +325,8 @@ class DepthReconstruction(object):
                     'depths': self.depths, 'inv_depths': self.inv_depths,
                     'fitting_cost': self.fitting_cost}
 
-            with open('{:s}'.format(results_file), "wb") as f:
-                pickle.dump(data, f, True)
+#            with open('{:s}'.format(results_file), "wb") as f:
+#                pickle.dump(data, f, True)
 
     def superpixel_seg(self, num_segments = 5000, method='slic', show_res = 0):
         """
