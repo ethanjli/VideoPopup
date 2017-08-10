@@ -15,27 +15,30 @@ _PACKAGE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _ROOT_PATH = os.path.dirname(_PACKAGE_PATH)
 
 if(expr == 'kitti_sequence'):
+    seg_file = os.path.join(
+	_ROOT_PATH,
+	'data/Kitti/05/broxmalik_Size4/broxmalikResults/f1t15/v5/' \
+	'vw10_nn10_k5_thresh10000_max_occ12_op0_cw2.5/init200/mdl2000_pw10000_oc10_engine0_it5/results.pkl'
+    )
+
+    bin_gt_file = os.path.join(
+	_ROOT_PATH,
+	'data/Kitti/05/broxmalik_Size4/002491.bin'
+    )
+
+    K = np.array([[707.0912, 0,  601.8873],
+		  [0,  707.0912, 183.1104],
+		  [0,        0,       1]])
+
+    with open(seg_file, 'r') as f:
+	seg = pickle.load(f)
+
+    # plot the segmentation result
+    #util.plot_nbor(seg['W'], seg['Z'], seg['s'], seg['images'], seg['labels_objects'])
+    #util.plot_nbor(seg['W'], seg['Z'], seg['s'], seg['images'], seg['labels_parts'])
+
     for image_index in range(14):
-
 	    print image_index
-
-	    seg_file = os.path.join(
-		_ROOT_PATH,
-		'data/Kitti/05/broxmalik_Size4/broxmalikResults/f1t15/v5/' \
-		'vw10_nn10_k5_thresh10000_max_occ12_op0_cw2.5/init200/mdl2000_pw10000_oc10_engine0_it5/results.pkl'
-	    )
-
-	    bin_gt_file = os.path.join(
-		_ROOT_PATH,
-		'data/Kitti/05/broxmalik_Size4/002491.bin'
-	    )
-
-	    K = np.array([[707.0912, 0,  601.8873],
-			  [0,  707.0912, 183.1104],
-			  [0,        0,       1]])
-
-	    with open(seg_file, 'r') as f:
-		seg = pickle.load(f)
 
 	    Z = seg['Z']
 	    mask = np.logical_and(Z[image_index], Z[image_index+1])
@@ -43,11 +46,6 @@ if(expr == 'kitti_sequence'):
 	    Z = seg['Z'][image_index:image_index+2,mask]
 	    labels = seg['labels_objects'][mask]
 	    images = seg['images'][image_index:image_index+2]
-
-
-	    # plot the segmentation result
-	    #util.plot_nbor(seg['W'], seg['Z'], seg['s'], seg['images'], seg['labels_objects'])
-	    #util.plot_nbor(seg['W'], seg['Z'], seg['s'], seg['images'], seg['labels_parts'])
 
 	    data = (W, Z, labels, K, images)
 	    print images
@@ -81,7 +79,8 @@ if(expr == 'kitti_sequence'):
 	    depth_map_recons.run()
 
             point_cloud_parent = os.path.join(os.path.dirname(seg_file), 'SuperPixels')
-            for file_name in ['points_sparse', 'points_dense_nearest', 'points_dense_linear']:
+            for file_name in ['points_sparse', 'points_dense_nearest',
+                              'points_dense_linear', 'points_dense_global']:
                 os.rename(os.path.join(point_cloud_parent, file_name + '.mat'), os.path.join(point_cloud_parent, file_name + '_' + str(image_index) + '.mat'))
 
 elif(expr == 'kitti_rigid'):

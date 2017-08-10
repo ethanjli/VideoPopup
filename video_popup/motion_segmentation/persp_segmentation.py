@@ -143,7 +143,7 @@ def persp_segmentation(neighborhood_para, segmentaton_para, model_fitting_para, 
         assignment, labels, outliers, inliers = model_fitting.run()
 
         # plot result
-        # util.plot_nbor(W, Z, s, images, labels=labels, show_edge=0, show_overlap=1, show_broken=1, assignment=assignment)
+        #util.plot_nbor(W, Z, s, images, labels=labels, show_edge=0, show_overlap=1, show_broken=1, assignment=assignment)
 
         # delete outliers or not
         # labels_objects, W_new, Z_new, assignment_new, s_new, labels_parts = util.merge_parts_to_objects(W, Z, s, labels, assignment, thresh=50)
