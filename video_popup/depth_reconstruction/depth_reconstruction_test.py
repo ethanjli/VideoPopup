@@ -48,13 +48,13 @@ if(expr == 'kitti_sequence'):
 	    images = seg['images'][image_index:image_index+2]
 
 	    data = (W, Z, labels, K, images)
-	    print images
 
 	    # parameters
 	    # num_segments
 	    # lambda_reg, kappa, gamma
 
 	    para = {}
+	    para['file_suffix'] = str(image_index)
 	    para['seg_folder'] = os.path.dirname(seg_file)
 	    para['num_segments'] = 5000
 	    para['lambda_reg_list'] = [100]
@@ -77,11 +77,6 @@ if(expr == 'kitti_sequence'):
 	    depth_map_recons = DepthReconstruction(data, para)
 
 	    depth_map_recons.run()
-
-            point_cloud_parent = os.path.join(os.path.dirname(seg_file), 'SuperPixels')
-            for file_name in ['points_sparse', 'points_dense_nearest',
-                              'points_dense_linear', 'points_dense_global']:
-                os.rename(os.path.join(point_cloud_parent, file_name + '.mat'), os.path.join(point_cloud_parent, file_name + '_' + str(image_index) + '.mat'))
 
 elif(expr == 'kitti_rigid'):
 

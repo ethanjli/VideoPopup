@@ -53,6 +53,7 @@ class DepthReconstruction(object):
         self.track_colors = self.ref_image[W[1].astype(np.int32), W[0].astype(np.int32), :]
 
         self.para = para
+        self.file_suffix = para.get('file_suffix', '')
 
     def run_check(self, check_num = 0):
 
@@ -103,7 +104,7 @@ class DepthReconstruction(object):
 
 	results_folder = self.para['seg_folder'] + '/SuperPixels/'
         try:
-            results_file = self.para['seg_folder'] + '/SuperPixels/' + str(self.para['num_segments']) + '/sp_info.pkl'
+            results_file = self.para['seg_folder'] + '/SuperPixels/' + str(self.para['num_segments']) + '/sp_info' + self.file_suffix + '.pkl'
             util.ensure_dir(results_file)
             with open(results_file, 'r') as f:
                 superpixels, sp_centers, sp_colors, superpixel_edges, object_edges, dense_labels = pickle.load(f)
@@ -111,8 +112,8 @@ class DepthReconstruction(object):
             superpixels, sp_centers, sp_colors = self.superpixel_seg(num_segments=self.para['num_segments'])
             superpixel_edges, object_edges, dense_labels = self.create_edges(superpixels, sp_centers, sp_colors)
             data = (superpixels, sp_centers, sp_colors, superpixel_edges, object_edges, dense_labels)
-            #with open(results_file, 'w') as f:
-            #        pickle.dump(data, f)
+            with open(results_file, 'w') as f:
+                    pickle.dump(data, f)
 
         # plt.imshow(dense_labels)
         nH, nW, nC = self.ref_image.shape
@@ -150,7 +151,7 @@ class DepthReconstruction(object):
         from video_popup.visualization import vispy_viewer
         #vispy_viewer.app_call(vertices, self.track_colors, self.K, nH, nW)
 
- 	util.save_3d_point_cloud('{:s}/points_sparse.mat'.format(results_folder), vertices, self.track_colors)	
+ 	util.save_3d_point_cloud('{:s}/points_sparse_{:s}.mat'.format(results_folder, self.file_suffix), vertices, self.track_colors)	
 #	pc_output = {'point_colored' : np.hstack([vertices, self.track_colors])}
 #	#pc_output = {'vertices':, vertices 'track_colors': self.track_colors}
 #        with open('{:s}/point_colored.mat'.format(results_folder),"wb") as f:
@@ -173,7 +174,7 @@ class DepthReconstruction(object):
         depth_map_interp = griddata(self.W[1::-1,:].T, self.depths, (grid_x, grid_y), method='nearest')
 
 	
-        depth_util.depth_map_save('{:s}/points_dense_nearest.mat'.format(results_folder), depth_map_interp, self.ref_image, self.K)
+        depth_util.depth_map_save('{:s}/points_dense_nearest_{:s}.mat'.format(results_folder, self.file_suffix), depth_map_interp, self.ref_image, self.K)
         # try image inpainting
         # depth_map_inpainting = util.image_inpainting_sparse(self.W[1::-1,:], self.depths, nH, nW)
         #depth_util.depth_map_plot(depth_map_interp, self.ref_image, self.K)
@@ -183,7 +184,7 @@ class DepthReconstruction(object):
         depth_map_interp_linear = griddata(self.W[1::-1,:].T, self.depths, (grid_x, grid_y), method='linear')
 
 
-        depth_util.depth_map_save('{:s}/points_dense_linear.mat'.format(results_folder), depth_map_interp_linear, self.ref_image, self.K)
+        depth_util.depth_map_save('{:s}/points_dense_linear_{:s}.mat'.format(results_folder, self.file_suffix), depth_map_interp_linear, self.ref_image, self.K)
 
  	doing_rigid = self.para.get('doing_rigid', 0)
         if (self.para['has_gt']):
@@ -248,7 +249,7 @@ class DepthReconstruction(object):
         #depth_map_interp_linear = griddata(self.W[1::-1,:].T, self.depths, (grid_x, grid_y), method='linear')
         #depth_util.depth_map_plot(depth_map_interp_linear, self.ref_image, self.K, labels = dense_labels)
 	depth_map_interp_linear[dense_labels == 0] = 0
-        depth_util.depth_map_save('{:s}/points_dense_global.mat'.format(results_folder), depth_map_interp_linear, self.ref_image, self.K)
+        depth_util.depth_map_save('{:s}/points_dense_foreground_{:s}.mat'.format(results_folder, self.file_suffix), depth_map_interp_linear, self.ref_image, self.K)
 
     def sparse_reconstruction(self, plot_seg = 0, plot_recons = 0):
 
