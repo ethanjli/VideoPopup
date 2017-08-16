@@ -48,6 +48,8 @@ class DepthReconstruction(object):
         self.fitting_cost = np.zeros_like(labels).astype(np.float64)
 
         self.ref_image = mpimg.imread(images[0])
+#	if self.ref_image.max() > 1.0:
+#		self.ref_image = self.ref_image / 255.0
 
         ## get colors for the tracks
         self.track_colors = self.ref_image[W[1].astype(np.int32), W[0].astype(np.int32), :]
@@ -100,7 +102,7 @@ class DepthReconstruction(object):
         #util.plot_traj2(self.W, self.Z, self.images, labels=self.labels, save_fig=1)
         # util.plot_traj2(self.W, self.Z, self.images, labels=self.labels)
 
-        self.sparse_reconstruction()
+        self.sparse_reconstruction(plot_recons=0)
 
 	results_folder = self.para['seg_folder'] + '/SuperPixels/'
         try:
@@ -143,7 +145,7 @@ class DepthReconstruction(object):
                           self.depths * ( np.vstack((self.W[0:2,:],
                                                      np.ones( (1,self.W.shape[1]) ) ) ) ) ).T
         
-        # util.plot_3d_point_cloud_vispy( vertices, self.track_colors )
+        #util.plot_3d_point_cloud_vispy( vertices, self.track_colors )
         
         vertices[:,1] = -vertices[:,1]
         vertices[:,2] = -vertices[:,2]
@@ -152,10 +154,6 @@ class DepthReconstruction(object):
         #vispy_viewer.app_call(vertices, self.track_colors, self.K, nH, nW)
 
  	util.save_3d_point_cloud('{:s}/points_sparse_{:s}.mat'.format(results_folder, self.file_suffix), vertices, self.track_colors)	
-#	pc_output = {'point_colored' : np.hstack([vertices, self.track_colors])}
-#	#pc_output = {'vertices':, vertices 'track_colors': self.track_colors}
-#        with open('{:s}/point_colored.mat'.format(results_folder),"wb") as f:
-#            scipy.io.savemat(f, mdict=pc_output)
 
         # we already create edges between fg and bg, just set those unknown region as bg
         dense_labels[dense_labels == -1] = self.bg_label
@@ -275,11 +273,6 @@ class DepthReconstruction(object):
             self.pnts_num = data['pnts_num']
             self.fitting_cost = data['fitting_cost']
 
-	    #Output the file to a .mat file so we can read it
-	    output_file = results_folder + 'results.mat'
-	    
-	    with open(output_file, 'wb') as f:
-		scipy.io.savemat(f, mdict=data)
 	except:
 
             for label in np.unique(self.labels):
@@ -293,6 +286,7 @@ class DepthReconstruction(object):
 
 		print 'Wi size: ', Wi.shape
                 R, T, X, cost, inliers = sfm2.reconstruction(Wi, self.K)
+		
 
                 xmin = np.percentile(X[2,:], 5)
                 xmax = np.percentile(X[2,:], 95)
@@ -308,9 +302,13 @@ class DepthReconstruction(object):
 
                 # if(plot_recons):
                 #     util.scatter3d(X[:, mask2 == False])
+		track_pc = self.track_colors[mask, :][mask2 == False]
+		print 'shape of track_colors', self.track_colors.shape
+		print 'shape of X into point cloud',X[0:3, mask2 == False].T.shape 
+		print 'shape of track_colors into point cloud',self.track_colors[mask, :][mask2 == False].shape           
+		print 'range of track_colors',track_pc.min(), ' ', track_pc.max() 
 
-
-                if(plot_recons):
+		if(plot_recons):
                     util.plot_3d_point_cloud_vispy(X[0:3, mask2 == False].T,
                                                    self.track_colors[mask, :][mask2 == False])
                     # vertices = X[0:3, mask2 == False].T
@@ -337,6 +335,11 @@ class DepthReconstruction(object):
                     'depths': self.depths, 'inv_depths': self.inv_depths,
                     'fitting_cost': self.fitting_cost}
 
+	    #Output the file to a .mat file so we can read it
+	    output_file = results_folder + 'results.mat'
+	    
+	    with open(output_file, 'wb') as f:
+		scipy.io.savemat(f, mdict=data)
 #            with open('{:s}'.format(results_file), "wb") as f:
 #                pickle.dump(data, f, True)
 

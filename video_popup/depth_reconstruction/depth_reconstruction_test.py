@@ -7,7 +7,8 @@ import logging
 from video_popup.utils import util
 from depth_reconstruction import DepthReconstruction
 
-expr = 'kitti_sequence'
+expr = 'log_sequence'
+#expr = 'kitti_sequence'
 #expr = 'kitti_rigid'
 #expr = 'kitti_dense'
 
@@ -21,10 +22,12 @@ if(expr == 'kitti_sequence'):
 	'vw10_nn10_k5_thresh10000_max_occ12_op0_cw2.5/init200/mdl2000_pw10000_oc10_engine0_it5/results.pkl'
     )
 
+    """
     bin_gt_file = os.path.join(
 	_ROOT_PATH,
 	'data/Kitti/05/broxmalik_Size4/002491.bin'
     )
+    """
 
     K = np.array([[707.0912, 0,  601.8873],
 		  [0,  707.0912, 183.1104],
@@ -64,12 +67,14 @@ if(expr == 'kitti_sequence'):
 	    para['has_gt'] = 0
 	    para['expr'] = 'kitti'
 
+	    """
 	    Tr = np.array([[-0.001857739385241,  -0.999965951351000,  -0.008039975204516,  -0.004784029760483],
 			   [-0.006481465826011,   0.008051860151134,  -0.999946608177400,  -0.073374294642310],
 			   [0.999977309828700,  -0.001805528627661,  -0.006496203536139,  -0.333996806443300]])
 
 	    para['Tr'] = Tr
 	    para['bin_gt_file'] = bin_gt_file
+	    """
 
 	    logging.basicConfig(filename=para['seg_folder'] + '/record.log', level=logging.DEBUG,
 				format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
@@ -77,6 +82,64 @@ if(expr == 'kitti_sequence'):
 	    depth_map_recons = DepthReconstruction(data, para)
 
 	    depth_map_recons.run()
+
+elif(expr == 'log_sequence'):
+    seg_file = os.path.join(
+	_ROOT_PATH,
+	'data/Log_C920_x1/3_downsampled/broxmalik_Size2/broxmalikResults/f1t6/v1/' \
+	'vw10_nn10_k1_thresh100_max_occ2_op0_cw2.5/init200/mdl20000_pw3000_oc10_engine0_it5/results.pkl'
+    )
+
+    K = np.array([[945.263352542335, 0.0, 624.6886174626084],
+		  [0.0, 946.2193053403839, 368.2837402254456],
+		  [0.0, 0.0, 1.0]])
+
+    with open(seg_file, 'r') as f:
+	seg = pickle.load(f)
+
+    for image_index in range(4):
+	    print image_index
+
+	    Z = seg['Z']
+	    mask = np.logical_and(Z[image_index], Z[image_index+1])
+	    W = seg['W'][(2*image_index):(2*image_index+4),mask]
+	    Z = seg['Z'][image_index:image_index+2,mask]
+	    labels = seg['labels_objects'][mask]
+	    images = seg['images'][image_index:image_index+2]
+
+	    data = (W, Z, labels, K, images)
+
+	    # parameters
+	    # num_segments
+	    # lambda_reg, kappa, gamma
+
+	    para = {}
+	    para['file_suffix'] = str(image_index)
+	    para['seg_folder'] = os.path.dirname(seg_file)
+	    para['num_segments'] = 5000
+	    para['lambda_reg_list'] = [100]
+	    para['kappa_list'] = [1]
+	    para['gamma_list'] = [1]
+
+	    para['has_gt'] = 0
+	    para['expr'] = 'kitti'
+
+	    """
+	    Tr = np.array([[-0.001857739385241,  -0.999965951351000,  -0.008039975204516,  -0.004784029760483],
+			   [-0.006481465826011,   0.008051860151134,  -0.999946608177400,  -0.073374294642310],
+			   [0.999977309828700,  -0.001805528627661,  -0.006496203536139,  -0.333996806443300]])
+
+	    para['Tr'] = Tr
+	    para['bin_gt_file'] = bin_gt_file
+	    """
+
+	    logging.basicConfig(filename=para['seg_folder'] + '/record.log', level=logging.DEBUG,
+				format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+
+	    depth_map_recons = DepthReconstruction(data, para)
+
+	    depth_map_recons.run()
+
 
 elif(expr == 'kitti_rigid'):
 
