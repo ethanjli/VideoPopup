@@ -225,29 +225,29 @@ class DepthReconstruction(object):
 
         expr_dict_list = util.generate_para_lists(loop_dict)
 
-	"""
+        """
         for energy_para in expr_dict_list:
 
             depth_map, fg_to_bg_edges, inv_scales = \
                 self.global_optimization( superpixels, objects_num, superpixel_edges, object_edges,
                                           dense_labels, sp_colors, self.para, energy_para)
 
-	    # scale up depths
-	    for obj in range(objects_num):
-	        depth_map_interp_linear[dense_labels == obj] *= 1/inv_scales[obj,0]
+        # scale up depths
+        for obj in range(objects_num):
+            depth_map_interp_linear[dense_labels == obj] *= 1/inv_scales[obj,0]
 
-            if(self.para['has_gt']):
-                depth_gt = self.get_ground_truth_depth(self.para)
+            #if(self.para['has_gt']):
+                #depth_gt = self.get_ground_truth_depth(self.para)
                 # scale up depths
                 # for obj in range(objects_num):
                 #     depth_map_interp[dense_labels == obj] *= 1/inv_scales[obj,0]
                 # self.evaluation(depth_map_interp, depth_gt, self.para, method='SparseInterp', scale_optim = 1)
                 # self.evaluation( depth_map, depth_gt, self.para, epara = energy_para)
-	"""
-        #depth_map_interp_linear = griddata(self.W[1::-1,:].T, self.depths, (grid_x, grid_y), method='linear')
+        depth_map_interp_linear = griddata(self.W[1::-1,:].T, self.depths, (grid_x, grid_y), method='linear')
         #depth_util.depth_map_plot(depth_map_interp_linear, self.ref_image, self.K, labels = dense_labels)
-	depth_map_interp_linear[dense_labels == 0] = 0
-        depth_util.depth_map_save('{:s}/points_dense_foreground_{:s}.mat'.format(results_folder, self.file_suffix), depth_map_interp_linear, self.ref_image, self.K)
+        #depth_map_interp_linear[dense_labels == 0] = 0
+        depth_util.depth_map_save('{:s}/points_dense_global_{:s}.mat'.format(results_folder, self.file_suffix), depth_map_interp_linear, self.ref_image, self.K)
+        """
 
     def sparse_reconstruction(self, plot_seg = 0, plot_recons = 0):
 

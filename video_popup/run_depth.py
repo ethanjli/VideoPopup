@@ -39,12 +39,13 @@ def copy_files(ms_results_folder, results_path):
 def main(args):
     # Run depth reconstruction
     command_pool = executor.concurrent.CommandPool()
+    command_pool = None
     for (subsequence, start, end, subsampling) in subsequences.generate_subsequences_from_args(args):
         bm_results_folder_name = subsequences.results_folder_name(args.size, start, args.length, subsampling)
         print bm_results_folder_name
         dir = os.path.join(subsequences._DATASETS_PATH, args.name)
         process_segments(dir, bm_results_folder_name, subsequence, command_pool)
-    command_pool.run()
+    #command_pool.run()
 
     # Copy files to results
     for (subsequence, start, end, subsampling) in subsequences.generate_subsequences_from_args(args):

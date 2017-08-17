@@ -21,6 +21,7 @@ if __name__ == '__main__':
     subsequences.add_subsequence_args(parser)
     args = parser.parse_args()
 
+    subsequences.clear_directory(subsequences._OUTPUT_PATH)
     run_broxmalik.main(args)
     run_matlab_input.main(args)
     run_motseg.main(args)

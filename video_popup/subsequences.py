@@ -60,6 +60,7 @@ def generate_matlab_command(script):
     return [MATLAB_COMMAND, '-nodisplay', '-r', 'addpath ' + MATLAB_PATH + '; ' + script + '; exit']
 
 def clear_directory(path):
+    make_dir_path(path)
     for file in os.listdir(path):
         file_path = os.path.join(path, file)
         try:
@@ -73,7 +74,7 @@ def clear_directory(path):
 def copy_files(parent_path, file_prefix, file_suffix, destination_path):
     make_dir_path(destination_path)
     for filename in file_names(parent_path, file_prefix, file_suffix):
-        shutil.copy(os.path.join(parent_path, filename), os.path.join(destination_path))
+        shutil.copy(os.path.join(parent_path, filename), destination_path)
 
 def generate_subsequences(sequence, length, subsampling, step, start, end):
     if step == 0:

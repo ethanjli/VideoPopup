@@ -104,6 +104,8 @@ elif(expr == 'log_sequence'):
     K = np.array([[945.263352542335, 0.0, 624.6886174626084],
 		  [0.0, 946.2193053403839, 368.2837402254456],
 		  [0.0, 0.0, 1.0]])
+    # ONLY FOR DOWNSAMPLED IMAGES
+    K[:2] *= 0.5
 
     with open(seg_file, 'r') as f:
 	seg = pickle.load(f)
