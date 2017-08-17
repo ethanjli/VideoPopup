@@ -13,8 +13,13 @@ _PACKAGE_PATH = os.path.dirname(os.path.abspath(__file__))
 _ROOT_PATH = os.path.dirname(_PACKAGE_PATH)
 _DATASETS_PATH = os.path.join(_ROOT_PATH, 'data')
 _OUTPUT_PATH = os.path.join(_ROOT_PATH, 'results')
-_MATLAB_PATH = os.path.join(_ROOT_PATH, 'matlab')
-_MATLAB_COMMAND = 'LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libstdc++.so.6:$LD_PRELOAD" /usr/local/MATLAB/R2013a/bin/matlab'
+MATLAB_PATH = os.path.join(_ROOT_PATH, 'matlab')
+MATLAB_ENVIRONMENT = os.environ.copy()
+if 'LD_PRELOAD' not in MATLAB_ENVIRONMENT:
+    MATLAB_ENVIRONMENT['LD_PRELOAD'] = '/usr/lib/x86_64-linux-gnu/libstdc++.so.6'
+else:
+    MATLAB_ENVIRONMENT['LD_PRELOAD'] = '/usr/lib/x86_64-linux-gnu/libstdc++.so.6:' + MATLAB_ENVIRONMENT['LD_PRELOAD']
+MATLAB_COMMAND = '/usr/local/MATLAB/R2013a/bin/matlab'
 
 # UTIL FUNCTIONS FROM CHARIOT
 
@@ -50,6 +55,9 @@ def file_names(parent_path, file_prefix='', file_suffix=''):
             yield file_name
 
 # OWN FUNCTIONS
+
+def generate_matlab_command(script):
+    return [MATLAB_COMMAND, '-nodisplay', '-r', 'addpath ' + MATLAB_PATH + '; ' + script + '; exit']
 
 def clear_directory(path):
     for file in os.listdir(path):
@@ -95,9 +103,11 @@ def motseg_results_folder_path(parent_dir, bm_results_folder_name, num_images):
     return os.path.join(parent_dir, bm_results_folder_name, 'broxmalikResults', 'f1t{}'.format(num_images), 'v1', 'vw10_nn10_k1_thresh100_max_occ2_op0_cw2.5', 'init200', 'mdl20000_pw3000_oc10_engine0_it5')
 
 def add_subsequence_args(parser):
+    parser.add_argument('name', type=str, help='name of image sequence of input images, e.g. "Log_C920_x1/3_downsampled"')
     parser.add_argument('--length', type=int, help='number of frames per subsequence', default=8)
     parser.add_argument('--subsampling', type=int, help='number of frames to ignore between frames in each subsequence', default=10)
     parser.add_argument('--step', type=int, help='number of frames between the first frames of consecutive subsequences, default is --length.', default=0)
     parser.add_argument('--start', type=int, help='number of frames to ignore before the first frame of the first subsequence', default=0)
     parser.add_argument('--end', type=int, help='number of frames to ignore before the last frame of the last subsequence and the end of the sequence', default=0)
+    parser.add_argument('--size', type=int, help='broxmalik step size', default=2)
 

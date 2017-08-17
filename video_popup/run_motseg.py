@@ -27,13 +27,12 @@ def process_tracks(parent_dir, bm_results_folder_name, subsequence_folder_name, 
 
 def copy_files(ms_results_folder, results_path):
     subsequences.clear_directory(results_path)
+    print os.path.join(ms_results_folder, 'results.mat')
     shutil.copy(os.path.join(ms_results_folder, 'results.mat'),
                 os.path.join(results_path, 'results.mat'))
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('name', type=str, help='name of image sequence of input images, e.g. "Log_C920_x1/3_downsampled"')
-    parser.add_argument('--size', type=int, help='broxmalik step size', default=2)
     subsequences.add_subsequence_args(parser)
     args = parser.parse_args()
 

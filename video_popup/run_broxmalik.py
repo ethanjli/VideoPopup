@@ -49,8 +49,6 @@ def process_images(parent_dir, results_folder_name, subsequence_folder_name, ima
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('name', type=str, help='name of image sequence of input images, e.g. "Log_C920_x1/3_downsampled"')
-    parser.add_argument('--size', type=int, help='broxmalik step size', default=2)
     subsequences.add_subsequence_args(parser)
     args = parser.parse_args()
 
