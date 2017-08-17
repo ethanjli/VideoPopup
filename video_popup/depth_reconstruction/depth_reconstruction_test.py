@@ -4,16 +4,32 @@ import cPickle as pickle
 
 import logging
 
+import argparse
 from video_popup.utils import util
 from depth_reconstruction import DepthReconstruction
+
+_PACKAGE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_ROOT_PATH = os.path.dirname(_PACKAGE_PATH)
 
 expr = 'log_sequence'
 #expr = 'kitti_sequence'
 #expr = 'kitti_rigid'
 #expr = 'kitti_dense'
 
-_PACKAGE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_ROOT_PATH = os.path.dirname(_PACKAGE_PATH)
+parser = argparse.ArgumentParser(description='Process some integers.')
+parser.add_argument('--seg_file', type=str, default=os.path.join(
+	_ROOT_PATH,
+	'data/Log_C920_x1/3_downsampled/broxmalik_Size2/broxmalikResults/f1t6/v1/' \
+	'vw10_nn10_k1_thresh100_max_occ2_op0_cw2.5/init200/mdl20000_pw3000_oc10_engine0_it5/results.pkl'
+    ),
+                    help='Full location of the results.pkl file')
+parser.add_argument('--expr' ,type=str, default='log_sequence',
+                    help='Determines the type of dataset the segmentation runs on')
+parser.add_argument('--endframe', type=int, default=4,help='Number of iterations to run the depth reconstruction')
+args = parser.parse_args()
+
+
+
 
 if(expr == 'kitti_sequence'):
     seg_file = os.path.join(
@@ -84,12 +100,7 @@ if(expr == 'kitti_sequence'):
 	    depth_map_recons.run()
 
 elif(expr == 'log_sequence'):
-    seg_file = os.path.join(
-	_ROOT_PATH,
-	'data/Log_C920_x1/3_downsampled/broxmalik_Size2/broxmalikResults/f1t6/v1/' \
-	'vw10_nn10_k1_thresh100_max_occ2_op0_cw2.5/init200/mdl20000_pw3000_oc10_engine0_it5/results.pkl'
-    )
-
+    seg_file = args.seg_file 
     K = np.array([[945.263352542335, 0.0, 624.6886174626084],
 		  [0.0, 946.2193053403839, 368.2837402254456],
 		  [0.0, 0.0, 1.0]])
@@ -97,7 +108,7 @@ elif(expr == 'log_sequence'):
     with open(seg_file, 'r') as f:
 	seg = pickle.load(f)
 
-    for image_index in range(4):
+    for image_index in range(args.endframe-1):
 	    print image_index
 
 	    Z = seg['Z']
