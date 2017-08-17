@@ -31,11 +31,7 @@ def copy_files(ms_results_folder, results_path):
     shutil.copy(os.path.join(ms_results_folder, 'results.mat'),
                 os.path.join(results_path, 'results.mat'))
 
-def main():
-    parser = argparse.ArgumentParser()
-    subsequences.add_subsequence_args(parser)
-    args = parser.parse_args()
-
+def main(args):
     # Run motion segmentation
     command_pool = executor.concurrent.CommandPool()
     for (subsequence, start, end, subsampling) in subsequences.generate_subsequences_from_args(args):
@@ -55,4 +51,8 @@ def main():
         copy_files(ms_results_folder, results_path)
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    subsequences.add_subsequence_args(parser)
+    args = parser.parse_args()
+
+    main(args)

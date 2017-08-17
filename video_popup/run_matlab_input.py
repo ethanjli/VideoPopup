@@ -24,11 +24,7 @@ def process_images(subsequence_folder, results_path, command_pool=None):
     for filename in subsequences.file_names(subsequence_folder, '', '.jpg'):
         execute_matlab(os.path.join(subsequence_folder, filename), results_path, command_pool)
 
-def main():
-    parser = argparse.ArgumentParser()
-    subsequences.add_subsequence_args(parser)
-    args = parser.parse_args()
-
+def main(args):
     command_pool = executor.concurrent.CommandPool()
     for (subsequence, start, end, subsampling) in subsequences.generate_subsequences_from_args(args):
         subsequence_folder_name = subsequences.subsequence_folder_name(start, args.length, args.subsampling)
@@ -39,4 +35,8 @@ def main():
     command_pool.run()
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    subsequences.add_subsequence_args(parser)
+    args = parser.parse_args()
+
+    main(args)

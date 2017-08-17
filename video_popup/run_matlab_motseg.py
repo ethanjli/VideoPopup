@@ -19,11 +19,7 @@ def execute_matlab(results_path, command_pool=None):
     else:
         command_pool.add(executor.ExternalCommand(*args, directory=results_path, environment=subsequences.MATLAB_ENVIRONMENT))
 
-def main():
-    parser = argparse.ArgumentParser()
-    subsequences.add_subsequence_args(parser)
-    args = parser.parse_args()
-
+def main(args):
     command_pool = executor.concurrent.CommandPool()
     # Copy files to results
     for (subsequence, start, end, subsampling) in subsequences.generate_subsequences_from_args(args):
@@ -32,4 +28,8 @@ def main():
     command_pool.run()
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    subsequences.add_subsequence_args(parser)
+    args = parser.parse_args()
+
+    main(args)

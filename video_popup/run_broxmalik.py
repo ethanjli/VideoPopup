@@ -47,11 +47,7 @@ def process_images(parent_dir, results_folder_name, subsequence_folder_name, ima
     make_bm_file(results_folder, image_filenames)
     execute_broxmalik(results_folder, len(image_filenames), bm_size, command_pool)
 
-def main():
-    parser = argparse.ArgumentParser()
-    subsequences.add_subsequence_args(parser)
-    args = parser.parse_args()
-
+def main(args):
     command_pool = executor.concurrent.CommandPool()
     for (subsequence, start, end, subsampling) in subsequences.generate_subsequences_from_args(args):
         results_folder_name = subsequences.results_folder_name(args.size, start, args.length, subsampling)
@@ -62,4 +58,8 @@ def main():
     command_pool.run()
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    subsequences.add_subsequence_args(parser)
+    args = parser.parse_args()
+
+    main(args)

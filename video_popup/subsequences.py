@@ -104,10 +104,10 @@ def motseg_results_folder_path(parent_dir, bm_results_folder_name, num_images):
 
 def add_subsequence_args(parser):
     parser.add_argument('name', type=str, help='name of image sequence of input images, e.g. "Log_C920_x1/3_downsampled"')
-    parser.add_argument('--length', type=int, help='number of frames per subsequence', default=8)
-    parser.add_argument('--subsampling', type=int, help='number of frames to ignore between frames in each subsequence', default=10)
+    parser.add_argument('--length', type=int, help='number of frames per subsequence', default=6)
+    parser.add_argument('--subsampling', type=int, help='number of frames to ignore between frames in each subsequence', default=15)
     parser.add_argument('--step', type=int, help='number of frames between the first frames of consecutive subsequences, default is --length.', default=0)
-    parser.add_argument('--start', type=int, help='number of frames to ignore before the first frame of the first subsequence', default=0)
+    parser.add_argument('--start', type=int, help='number of frames to ignore before the first frame of the first subsequence', default=14)
     parser.add_argument('--end', type=int, help='number of frames to ignore before the last frame of the last subsequence and the end of the sequence', default=0)
     parser.add_argument('--size', type=int, help='broxmalik step size', default=2)
 

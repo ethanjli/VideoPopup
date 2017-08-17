@@ -36,11 +36,7 @@ def copy_files(ms_results_folder, results_path):
     copy_point_clouds(point_clouds_folder, 'points_dense_linear_', results_path, 'DenseLinear')
     copy_point_clouds(point_clouds_folder, 'points_dense_foreground_', results_path, 'DenseForeground')
 
-def main():
-    parser = argparse.ArgumentParser()
-    subsequences.add_subsequence_args(parser)
-    args = parser.parse_args()
-
+def main(args):
     # Run depth reconstruction
     command_pool = executor.concurrent.CommandPool()
     for (subsequence, start, end, subsampling) in subsequences.generate_subsequences_from_args(args):
@@ -59,4 +55,8 @@ def main():
         copy_files(ms_results_folder, results_path)
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    subsequences.add_subsequence_args(parser)
+    args = parser.parse_args()
+
+    main(args)
