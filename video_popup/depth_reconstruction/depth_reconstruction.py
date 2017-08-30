@@ -20,6 +20,9 @@ from skimage.segmentation import slic, quickshift
 
 import logging
 
+# for the median filter
+from scipy import signal
+
 # my own stuff
 
 import depth_util
@@ -225,15 +228,17 @@ class DepthReconstruction(object):
 
         expr_dict_list = util.generate_para_lists(loop_dict)
 
-        """
+       
         for energy_para in expr_dict_list:
-
             depth_map, fg_to_bg_edges, inv_scales = \
                 self.global_optimization( superpixels, objects_num, superpixel_edges, object_edges,
                                           dense_labels, sp_colors, self.para, energy_para)
-
-        # scale up depths
+ 
+	print 'inv_scales', inv_scales        
+	print 'expr_dict_list size', len(expr_dict_list)
+	# scale up depths
         for obj in range(objects_num):
+	    print 'obj index', obj
             depth_map_interp_linear[dense_labels == obj] *= 1/inv_scales[obj,0]
 
             #if(self.para['has_gt']):
@@ -247,7 +252,7 @@ class DepthReconstruction(object):
         #depth_util.depth_map_plot(depth_map_interp_linear, self.ref_image, self.K, labels = dense_labels)
         #depth_map_interp_linear[dense_labels == 0] = 0
         depth_util.depth_map_save('{:s}/points_dense_global_{:s}.mat'.format(results_folder, self.file_suffix), depth_map_interp_linear, self.ref_image, self.K)
-        """
+        
 
     def sparse_reconstruction(self, plot_seg = 0, plot_recons = 0):
 
@@ -255,15 +260,17 @@ class DepthReconstruction(object):
         Do sparse reconstruction on each segmented rigid objects independently
         To make things robust, we just keep depth values within [5, 95] range
         """
-
+	matrix_shape = [3, 3, len(np.unique(self.labels))]
+	R_labels = np.zeros(matrix_shape)
+	T_labels = np.zeros(matrix_shape)
         try:
 
 	    results_folder = self.para['seg_folder'] + '/SparseResults/'
             results_file = results_folder  + 'results.pkl'
             util.ensure_dir(results_file)
 
-            with open(results_file, 'r') as f:
-                data = pickle.load(f)
+            #with open(results_file, 'r') as f:
+            #    data = pickle.load(f)
 
             #self.W = data['W']; self.Z = data['Z']
             self.depths = data['depths']
@@ -286,7 +293,8 @@ class DepthReconstruction(object):
 
 		print 'Wi size: ', Wi.shape
                 R, T, X, cost, inliers = sfm2.reconstruction(Wi, self.K)
-		
+		R_labels[:,:,label]=R	
+		T_labels[:,:,label]=T
 
                 xmin = np.percentile(X[2,:], 5)
                 xmax = np.percentile(X[2,:], 95)
@@ -321,7 +329,7 @@ class DepthReconstruction(object):
                 self.track_colors = np.delete(self.track_colors, rm, 0)
 
                 self.depths[mask] = np.dot(self.K, X[0:3, :])[2,:]
-                self.inv_depths[mask] = 1.0 / self.depths[mask]
+            	self.inv_depths[mask] = 1.0 / self.depths[mask]
                 self.fitting_cost[mask] = cost
 
                 self.depths = np.delete( self.depths, rm, 0 )
@@ -330,13 +338,22 @@ class DepthReconstruction(object):
 
                 self.pnts_num[label] = np.sum(mask)
 
+	    #Move the depths to extremities
+	    depths = self.depths
+	    median = np.median(self.depths)
+	    depths = depths / median
+	    depths = depths ** 2
+ 	    depths = depths * median
+	    #self.depths = depths 
+            self.inv_depths = 1.0 / self.depths
+
             data = {'W': self.W, 'Z': self.Z, 'labels': self.labels,
                     'track_colors': self.track_colors, 'pnts_num':self.pnts_num,
-                    'depths': self.depths, 'inv_depths': self.inv_depths,
-                    'fitting_cost': self.fitting_cost}
+                    'depths': self.depths, 'X' : X, 'inv_depths': self.inv_depths,
+                    'fitting_cost': self.fitting_cost, 'mask': mask, 'R': R_labels, 'T': T_labels}
 
 	    #Output the file to a .mat file so we can read it
-	    output_file = results_folder + 'results.mat'
+	    output_file = results_folder + "results_{:s}.mat".format(self.file_suffix)
 	    
 	    with open(output_file, 'wb') as f:
 		scipy.io.savemat(f, mdict=data)
@@ -567,239 +584,239 @@ class DepthReconstruction(object):
         return  scales
 
     def global_optimization(self, superpixels, objects_num, superpixel_edges,
-                            object_edges, dense_labels, sp_colors, para, energy_para):
+			    object_edges, dense_labels, sp_colors, para, energy_para):
+
+	"""
+	for better tuning parameters, probably we should normalize the parameters based on
+	the number of superpixels, the number of point tracks and the depth range value.
+	"""
+
+	# lambda_reg, kappa, gamma, fg_coef = 1, lamnda_depth = 0,
+	# lambda_constr = 0, lambda_reg2 = 0
+
+	print energy_para
+
+	kappa = energy_para.get('kappa', 1)
+	gamma = energy_para.get('gamma', 1)
+	fg_coef = energy_para.get('fg_coef', 1)
+
+	lambda_reg = energy_para.get('lambda_reg', 1)
+	lambda_reg2 = energy_para.get('lambda_reg2', 0)
+	lambda_depth = energy_para.get('lambda_depth', 0)
+	lambda_constr = energy_para.get('lambda_constr', 0)
+
+	seg_folder = para['seg_folder']
+	num_segments = para['num_segments']
+
+	depth_folder = '/VladlenDense/segs{:d}_lreg{:g}_kpa{:g}_gamma{:g}_lregtheta{:g}_ldepth{:g}_lconstr{:g}_fg_coef{:g}/'.\
+	    format(num_segments, lambda_reg, kappa, gamma, lambda_reg2, lambda_depth, lambda_constr, fg_coef)
+
+	results_folder = seg_folder + depth_folder
+
+	para['results_folder'] = results_folder
+
+	optim_results = results_folder + '/optim_results.pkl'
+
+	try:
+	    util.ensure_dir(optim_results)
+	    with open(optim_results, 'r') as f:
+	        thetas, inv_scales = pickle.load(f)
+	except:
+	    thetas = cp.Variable(len(np.unique(superpixels)), 3)
+	    inv_scales = cp.Variable( objects_num )
+
+	    # thetas_test = np.ones((len(np.unique(superpixels)), 3))
+	    # inv_scales_test = 1.0 / scales
+
+	    # regularization term
+	    num_reg = superpixel_edges.shape[1]
+
+	    edge_weights = np.exp( - kappa * np.sum( np.square( sp_colors[:, superpixel_edges[2,:] ].T -
+								sp_colors[:, superpixel_edges[5,:] ].T ), axis=1) )
+	    if(fg_coef != 1):
+
+		v1 = np.round(self.sp_centers[1, superpixel_edges[2,:]]).astype(np.int32)
+		u1 = np.round(self.sp_centers[0, superpixel_edges[2,:]]).astype(np.int32)
+
+		v2 = np.round(self.sp_centers[1, superpixel_edges[5, :]]).astype(np.int32)
+		u2 = np.round(self.sp_centers[0, superpixel_edges[5, :]]).astype(np.int32)
+
+		fg_mask = np.logical_and( dense_labels[ v1, u1 ] != self.bg_label,
+					  dense_labels[ v2, u2 ] != self.bg_label )
+
+		edge_weights[fg_mask] = edge_weights[fg_mask] * fg_coef
+
+		color = edge_weights.reshape((-1,1)) / np.max(edge_weights) * np.ones(( num_reg, 3 ))
+		util.plot_superpixels(self.sp_mcolor_image, sp_edges= superpixel_edges[[2,5]],
+				      sp_centers=self.sp_centers, color= color  )
+
+	    """
+	    regularization term, an option is to enforce the constraint that boundary pixels of neighboring superpixels
+	    should be close
+	    """
+	    objective_reg = cp.Minimize(
+		lambda_reg * cp.norm(
+            cp.mul_elemwise(edge_weights,
+                            (cp.sum_entries(
+                                cp.mul_elemwise(
+                                    np.vstack( (superpixel_edges[1,:],
+                                                superpixel_edges[0,:],
+                                                np.ones((1,num_reg)) ) ).T,
+                                    thetas[ superpixel_edges[2, :], : ]), axis=1)
+                             -
+                             cp.sum_entries(
+                                 cp.mul_elemwise(
+                                     np.vstack( (superpixel_edges[4,:],
+                                                 superpixel_edges[3,:],
+                                                 np.ones((1,num_reg)) ) ).T,
+                                     thetas[ superpixel_edges[5, :], : ]), axis=1))
+				    )
+		)
+	    )
+
+    #""" another option is to assume neighboring superpixels have similar plane parameters """
+        objective_reg2 = cp.Minimize(
+            lambda_reg2 * cp.norm(
+                thetas[ superpixel_edges[2, :], : ] - thetas[ superpixel_edges[5,:] ],
+                "fro"
+            )
+        )
 
         """
-        for better tuning parameters, probably we should normalize the parameters based on
-        the number of superpixels, the number of point tracks and the depth range value.
+        a new regularization term, this is a constraint to stop superpixels to spread out in depth direction,
+        just penalize the norm of the first two elements of thetas, the amount of stretching in depth
+        """
+        objective_reg_depth = cp.Minimize( lambda_depth * (cp.norm(thetas[:,0]) + cp.norm(thetas[:,1])) )
+
+        # data term
+        uv = self.W[0:2, :].astype(int)
+        num_data = uv.shape[1]
+
+        data_weights = np.exp(-gamma * self.fitting_cost)
+
+        objective_data = cp.Minimize(
+            cp.norm(
+                cp.mul_elemwise(data_weights,
+                                cp.sum_entries( cp.mul_elemwise(np.vstack( (uv[0], uv[1],np.ones((1, num_data)) ) ).T,
+                                                                thetas[ superpixels[ uv[1], uv[0] ], : ]), axis=1)
+                                -
+                                cp.mul_elemwise(self.inv_depths, inv_scales[ dense_labels[uv[1], uv[0]] ] )
+                                )
+            )
+        )
+
+        """
+        set up constraints for the optimization problem, we enforce that foreground superpixels should always
+        be in front of background superpixels
         """
 
-        # lambda_reg, kappa, gamma, fg_coef = 1, lamnda_depth = 0,
-        # lambda_constr = 0, lambda_reg2 = 0
+        constraints = {}
+        constraints_objective = {}
 
-        print energy_para
+        # for i in range(object_edges.shape[1]):
+        for i in range(object_edges[0].size):
 
-        kappa = energy_para.get('kappa', 1)
-        gamma = energy_para.get('gamma', 1)
-        fg_coef = energy_para.get('fg_coef', 1)
+            if(np.logical_and( (object_edges[1, i] == self.bg_label), (object_edges[1, i] != object_edges[3,i]) )):
 
-        lambda_reg = energy_para.get('lambda_reg', 1)
-        lambda_reg2 = energy_para.get('lambda_reg2', 0)
-        lambda_depth = energy_para.get('lambda_depth', 0)
-        lambda_constr = energy_para.get('lambda_constr', 0)
+                bg_sp = object_edges[0, i]
+                fg_sp = object_edges[2, i]
 
-        seg_folder = para['seg_folder']
-        num_segments = para['num_segments']
+            elif(np.logical_and( (object_edges[3, i] == self.bg_label), (object_edges[1, i] != object_edges[3,i]) )):
 
-        depth_folder = '/VladlenDense/segs{:d}_lreg{:g}_kpa{:g}_gamma{:g}_lregtheta{:g}_ldepth{:g}_lconstr{:g}_fg_coef{:g}/'.\
-            format(num_segments, lambda_reg, kappa, gamma, lambda_reg2, lambda_depth, lambda_constr, fg_coef)
+                bg_sp = object_edges[2, i]
+                fg_sp = object_edges[0, i]
 
-        results_folder = seg_folder + depth_folder
+            bg_uv = np.where(superpixels == bg_sp)
+            fg_uv = np.where(superpixels == fg_sp)
 
-        para['results_folder'] = results_folder
+            bg_idepths = thetas[bg_sp,:] * np.vstack( ( bg_uv[1], bg_uv[0], np.ones_like(bg_uv[0]) ) )
+            fg_idepths = thetas[fg_sp,:] * np.vstack( ( fg_uv[1], fg_uv[0], np.ones_like(fg_uv[0]) ) )
 
-        optim_results = results_folder + '/optim_results.pkl'
+            constraints[i] = cp.max_entries(bg_idepths) <= cp.min_entries(fg_idepths)
 
-        try:
-            util.ensure_dir(optim_results)
-            with open(optim_results, 'r') as f:
-                thetas, inv_scales = pickle.load(f)
-        except:
-            thetas = cp.Variable(len(np.unique(superpixels)), 3)
-            inv_scales = cp.Variable( objects_num )
+            constraints_objective[i] = cp.Minimize(
+                lambda_constr * cp.pos( cp.max_entries(bg_idepths) - cp.min_entries(fg_idepths) ) )
 
-            # thetas_test = np.ones((len(np.unique(superpixels)), 3))
-            # inv_scales_test = 1.0 / scales
+        """ start from data term and add up each regularization term gradually """
+        objective = objective_data
 
-            # regularization term
-            num_reg = superpixel_edges.shape[1]
+        if(lambda_reg > 0):
+            objective += objective_reg
 
-            edge_weights = np.exp( - kappa * np.sum( np.square( sp_colors[:, superpixel_edges[2,:] ].T -
-                                                                sp_colors[:, superpixel_edges[5,:] ].T ), axis=1) )
-            if(fg_coef != 1):
+        if(lambda_reg2 > 0):
+            objective += objective_reg2
 
-                v1 = np.round(self.sp_centers[1, superpixel_edges[2,:]]).astype(np.int32)
-                u1 = np.round(self.sp_centers[0, superpixel_edges[2,:]]).astype(np.int32)
+        if(lambda_depth > 0):
+            objective += objective_reg_depth
 
-                v2 = np.round(self.sp_centers[1, superpixel_edges[5, :]]).astype(np.int32)
-                u2 = np.round(self.sp_centers[0, superpixel_edges[5, :]]).astype(np.int32)
+        if(lambda_constr > 0):
+            for key, obj in constraints_objective.iteritems():
+                objective += obj
 
-                fg_mask = np.logical_and( dense_labels[ v1, u1 ] != self.bg_label,
-                                          dense_labels[ v2, u2 ] != self.bg_label )
+        constraint = []
 
-                edge_weights[fg_mask] = edge_weights[fg_mask] * fg_coef
+        for key, value in constraints.iteritems():
+            constraint.append( value )
 
-                color = edge_weights.reshape((-1,1)) / np.max(edge_weights) * np.ones(( num_reg, 3 ))
-                util.plot_superpixels(self.sp_mcolor_image, sp_edges= superpixel_edges[[2,5]],
-                                      sp_centers=self.sp_centers, color= color  )
+        for i in range(objects_num):
+            constraint.append( inv_scales[i] > 0 )
 
-            """
-            regularization term, an option is to enforce the constraint that boundary pixels of neighboring superpixels
-            should be close
-            """
-            objective_reg = cp.Minimize(
-                lambda_reg * cp.norm(
-                    cp.mul_elemwise(edge_weights,
-                                    (cp.sum_entries(
-                                        cp.mul_elemwise(
-                                            np.vstack( (superpixel_edges[1,:],
-                                                        superpixel_edges[0,:],
-                                                        np.ones((1,num_reg)) ) ).T,
-                                            thetas[ superpixel_edges[2, :], : ]), axis=1)
-                                     -
-                                     cp.sum_entries(
-                                         cp.mul_elemwise(
-                                             np.vstack( (superpixel_edges[4,:],
-                                                         superpixel_edges[3,:],
-                                                         np.ones((1,num_reg)) ) ).T,
-                                             thetas[ superpixel_edges[5, :], : ]), axis=1))
-                                    )
-                )
-            )
+        constraint.append( inv_scales[self.bg_label] == 1 )
 
-            """ another option is to assume neighboring superpixels have similar plane parameters """
-            objective_reg2 = cp.Minimize(
-                lambda_reg2 * cp.norm(
-                    thetas[ superpixel_edges[2, :], : ] - thetas[ superpixel_edges[5,:] ],
-                    "fro"
-                )
-            )
+        # """also add the constraint that the scales of other objects is also 1 """
+        # for i in range(objects_num):
+        #     constraint.append( inv_scales[i] == 1 )
 
-            """
-            a new regularization term, this is a constraint to stop superpixels to spread out in depth direction,
-            just penalize the norm of the first two elements of thetas, the amount of stretching in depth
-            """
-            objective_reg_depth = cp.Minimize( lambda_depth * (cp.norm(thetas[:,0]) + cp.norm(thetas[:,1])) )
+        prob = cp.Problem(objective, constraint)
 
-            # data term
-            uv = self.W[0:2, :].astype(int)
-            num_data = uv.shape[1]
+        # retrieve the results
+        prob.solve(verbose=True, solver=cp.SCS)
+        # prob.solve(verbose=True, solver=cp.SCS, scale=10)
 
-            data_weights = np.exp(-gamma * self.fitting_cost)
+        print "data cost : {:g}".format(objective_data.value)
+        print "reg cost : {:g}".format(objective_reg.value)
 
-            objective_data = cp.Minimize(
-                cp.norm(
-                    cp.mul_elemwise(data_weights,
-                                    cp.sum_entries( cp.mul_elemwise(np.vstack( (uv[0], uv[1],np.ones((1, num_data)) ) ).T,
-                                                                    thetas[ superpixels[ uv[1], uv[0] ], : ]), axis=1)
-                                    -
-                                    cp.mul_elemwise(self.inv_depths, inv_scales[ dense_labels[uv[1], uv[0]] ] )
-                                    )
-                )
-            )
+        # check if constraint is satisfied
+        constraint_values = {}
+        for k,c in enumerate(constraint):
+            # constraint_text = '%s %s %s' % (c.left.value, c.type, c.right)
+            # print '%s becomes %s which is %s' % (c, constraint_text, eval(constraint_text))
+            constraint_values[k] = c.value
 
-            """
-            set up constraints for the optimization problem, we enforce that foreground superpixels should always
-            be in front of background superpixels
-            """
+        #with open(optim_results, 'w') as f:
+        #    pickle.dump((thetas, inv_scales), f, True)
 
-            constraints = {}
-            constraints_objective = {}
-
-            # for i in range(object_edges.shape[1]):
-            for i in range(object_edges[0].size):
-
-                if(np.logical_and( (object_edges[1, i] == self.bg_label), (object_edges[1, i] != object_edges[3,i]) )):
-
-                    bg_sp = object_edges[0, i]
-                    fg_sp = object_edges[2, i]
-
-                elif(np.logical_and( (object_edges[3, i] == self.bg_label), (object_edges[1, i] != object_edges[3,i]) )):
-
-                    bg_sp = object_edges[2, i]
-                    fg_sp = object_edges[0, i]
-
-                bg_uv = np.where(superpixels == bg_sp)
-                fg_uv = np.where(superpixels == fg_sp)
-
-                bg_idepths = thetas[bg_sp,:] * np.vstack( ( bg_uv[1], bg_uv[0], np.ones_like(bg_uv[0]) ) )
-                fg_idepths = thetas[fg_sp,:] * np.vstack( ( fg_uv[1], fg_uv[0], np.ones_like(fg_uv[0]) ) )
-
-                constraints[i] = cp.max_entries(bg_idepths) <= cp.min_entries(fg_idepths)
-
-                constraints_objective[i] = cp.Minimize(
-                    lambda_constr * cp.pos( cp.max_entries(bg_idepths) - cp.min_entries(fg_idepths) ) )
-
-            """ start from data term and add up each regularization term gradually """
-            objective = objective_data
-
-            if(lambda_reg > 0):
-                objective += objective_reg
-
-            if(lambda_reg2 > 0):
-                objective += objective_reg2
-
-            if(lambda_depth > 0):
-                objective += objective_reg_depth
-
-            if(lambda_constr > 0):
-                for key, obj in constraints_objective.iteritems():
-                    objective += obj
-
-            constraint = []
-
-            for key, value in constraints.iteritems():
-                constraint.append( value )
-
-            for i in range(objects_num):
-                constraint.append( inv_scales[i] > 0 )
-
-            constraint.append( inv_scales[self.bg_label] == 1 )
-
-            # """also add the constraint that the scales of other objects is also 1 """
-            # for i in range(objects_num):
-            #     constraint.append( inv_scales[i] == 1 )
-
-            prob = cp.Problem(objective, constraint)
-
-            # retrieve the results
-            prob.solve(verbose=True, solver=cp.SCS)
-            # prob.solve(verbose=True, solver=cp.SCS, scale=10)
-
-            print "data cost : {:g}".format(objective_data.value)
-            print "reg cost : {:g}".format(objective_reg.value)
-
-            # check if constraint is satisfied
-            constraint_values = {}
-            for k,c in enumerate(constraint):
-                # constraint_text = '%s %s %s' % (c.left.value, c.type, c.right)
-                # print '%s becomes %s which is %s' % (c, constraint_text, eval(constraint_text))
-                constraint_values[k] = c.value
-
-            #with open(optim_results, 'w') as f:
-            #    pickle.dump((thetas, inv_scales), f, True)
-
-            # depth_constraints2 = []
-            # fg_idepths = []
-            # bg_idepths = []
-            # # for i in range(object_edges.shape[1]):
-            # for i in range(object_edges[0].size):
-            #
-            #     if (np.logical_and((object_edges[1, i] == self.bg_label), (object_edges[1, i] != object_edges[3, i]))):
-            #
-            #         bg_sp = object_edges[0, i]
-            #         fg_sp = object_edges[2, i]
-            #
-            #     elif (np.logical_and((object_edges[3, i] == self.bg_label), (object_edges[1, i] != object_edges[3, i]))):
-            #
-            #         bg_sp = object_edges[2, i]
-            #         fg_sp = object_edges[0, i]
-            #
-            #     bg_uv = np.where(superpixels == bg_sp)
-            #     fg_uv = np.where(superpixels == fg_sp)
-            #
-            #     bg_idepths2 = (bg_uv[1] * np.array(thetas.value[bg_sp, 0]) +
-            #                    bg_uv[0] * np.array(thetas.value[bg_sp, 1]) +
-            #                    np.array(thetas.value[bg_sp, 2]))
-            #     fg_idepths2 = (fg_uv[1] * np.array(thetas.value[fg_sp, 0]) +
-            #                    fg_uv[0] * np.array(thetas.value[fg_sp, 1]) +
-            #                    np.array(thetas.value[fg_sp, 2]))
-            #
-            #     bg_idepths.append( np.max(bg_idepths2) )
-            #     fg_idepths.append( np.min(fg_idepths2) )
-            #
-            #     depth_constraints2.append( bg_idepths[-1] <= fg_idepths[-1] )
-
+        # depth_constraints2 = []
+        # fg_idepths = []
+        # bg_idepths = []
+        # # for i in range(object_edges.shape[1]):
+        # for i in range(object_edges[0].size):
+        #
+        #     if (np.logical_and((object_edges[1, i] == self.bg_label), (object_edges[1, i] != object_edges[3, i]))):
+        #
+        #         bg_sp = object_edges[0, i]
+        #         fg_sp = object_edges[2, i]
+        #
+        #     elif (np.logical_and((object_edges[3, i] == self.bg_label), (object_edges[1, i] != object_edges[3, i]))):
+        #
+        #         bg_sp = object_edges[2, i]
+        #         fg_sp = object_edges[0, i]
+        #
+        #     bg_uv = np.where(superpixels == bg_sp)
+        #     fg_uv = np.where(superpixels == fg_sp)
+        #
+        #     bg_idepths2 = (bg_uv[1] * np.array(thetas.value[bg_sp, 0]) +
+        #                    bg_uv[0] * np.array(thetas.value[bg_sp, 1]) +
+        #                    np.array(thetas.value[bg_sp, 2]))
+        #     fg_idepths2 = (fg_uv[1] * np.array(thetas.value[fg_sp, 0]) +
+        #                    fg_uv[0] * np.array(thetas.value[fg_sp, 1]) +
+        #                    np.array(thetas.value[fg_sp, 2]))
+        #
+        #     bg_idepths.append( np.max(bg_idepths2) )
+        #     fg_idepths.append( np.min(fg_idepths2) )
+        #
+        #     depth_constraints2.append( bg_idepths[-1] <= fg_idepths[-1] )
+    
         nH, nW, nC = self.ref_image.shape
 
         u = np.array(range(nW))

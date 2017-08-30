@@ -29,8 +29,9 @@ def copy_point_clouds(source_folder, prefix, results_path, type):
 
 def copy_files(ms_results_folder, results_path):
     subsequences.clear_directory(results_path)
-    shutil.copy(os.path.join(ms_results_folder, 'SparseResults', 'results.mat'),
-                os.path.join(results_path, 'sparse_results.mat'))
+    #shutil.copy(os.path.join(ms_results_folder, 'SparseResults', 'results.mat'),
+    #            os.path.join(results_path, 'sparse_results.mat'))
+    copy_point_clouds(os.path.join(ms_results_folder, 'SparseResults'), 'results', results_path, 'sparse_results')
     point_clouds_folder = os.path.join(ms_results_folder, 'SuperPixels')
     copy_point_clouds(point_clouds_folder, 'points_sparse_', results_path, 'Sparse')
     copy_point_clouds(point_clouds_folder, 'points_dense_linear_', results_path, 'DenseLinear')

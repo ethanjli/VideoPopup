@@ -165,7 +165,7 @@ elif(expr == 'kitti_rigid'):
 
     segmentaton_para.tracks_path = os.path.join(_ROOT_PATH, 'data/Kitti/05/broxmalik_Size4/broxmalikResults/broxmalikTracks15.dat')
     model_fitting_para.mdl = 20000
-    model_fitting_para.graph_cut_para.pairwise_weight = 3000
+    model_fitting_para.graph_cut_para.pairwise_weight = 300
     model_fitting_para.graph_cut_para.overlap_cost = 10
     model_fitting_para.graph_cut_para.engine = 0
     model_fitting_para.iters_num = 5

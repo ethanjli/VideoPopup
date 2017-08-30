@@ -80,7 +80,8 @@ def generate_subsequences(sequence, length, subsampling, step, start, end):
     if step == 0:
         step = length * subsampling
     indices = range(len(sequence))
-    subsequence_start_indices = indices[start:len(indices):step]
+    #subsequence_start_indices = indices[start:len(indices):step]
+    subsequence_start_indices = indices[start:end:step]
     for subsequence_start_index in subsequence_start_indices:
         subsequence_end_index = min(subsequence_start_index + subsampling * length, len(sequence) - end)
         subsequence = sequence[subsequence_start_index:subsequence_end_index:subsampling]
@@ -99,7 +100,7 @@ def subsequence_folder_name(start, length, subsampling):
 
 def bm_results_folder_path(parent_dir, bm_results_folder_name):
     return os.path.join(parent_dir, bm_results_folder_name, 'broxmalikResults')
-
+#Need to change this to different parameters of mdl
 def motseg_results_folder_path(parent_dir, bm_results_folder_name, num_images):
     return os.path.join(parent_dir, bm_results_folder_name, 'broxmalikResults', 'f1t{}'.format(num_images), 'v1', 'vw10_nn10_k1_thresh100_max_occ2_op0_cw2.5', 'init200', 'mdl20000_pw3000_oc10_engine0_it5')
 
@@ -111,4 +112,6 @@ def add_subsequence_args(parser):
     parser.add_argument('--start', type=int, help='number of frames to ignore before the first frame of the first subsequence', default=14)
     parser.add_argument('--end', type=int, help='number of frames to ignore before the last frame of the last subsequence and the end of the sequence', default=0)
     parser.add_argument('--size', type=int, help='broxmalik step size', default=2)
+    parser.add_argument('--mdl', type=int, help='???', default=20000)
+    parser.add_argument('--pw', type=int, help='???', default=3000)
 

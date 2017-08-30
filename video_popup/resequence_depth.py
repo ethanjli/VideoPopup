@@ -23,6 +23,7 @@ def resequence_files(ms_results_folder, subsequence, results_path):
     resequence_copy_point_clouds(point_clouds_folder, 'points_sparse_', results_path, 'Sparse', subsequence)
     resequence_copy_point_clouds(point_clouds_folder, 'points_dense_linear_', results_path, 'DenseLinear', subsequence)
     resequence_copy_point_clouds(point_clouds_folder, 'points_dense_foreground_', results_path, 'DenseForeground', subsequence)
+    resequence_copy_point_clouds(point_clouds_folder, 'points_dense_global_', results_path, 'DenseGlobal', subsequence)
 
 def main(args):
     # Copy files to results

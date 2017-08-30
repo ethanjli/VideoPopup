@@ -155,7 +155,7 @@ class ModelFitting(object):
 
         for i in range(int(self.params.iters_num)):
 
-            print 'iteration' + '' + str(i)
+            print 'iteration' , ' ' , str(i), 'for motion segmentation'
 
             assignment, labels, outliers, inliers = self.update()
 

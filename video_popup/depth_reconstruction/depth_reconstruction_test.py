@@ -118,6 +118,12 @@ elif(expr == 'log_sequence'):
 	    W = seg['W'][(2*image_index):(2*image_index+4),mask]
 	    Z = seg['Z'][image_index:image_index+2,mask]
 	    labels = seg['labels_objects'][mask]
+
+	    #Zero out the labels
+	    #labels[:] = 0
+	    print 'Making sure the labels were zeroed out'
+	    print labels.max(), ' ', labels.min()
+
 	    images = seg['images'][image_index:image_index+2]
 
 	    data = (W, Z, labels, K, images)
